@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - production
-      - staging
 
 # Cancel in-progress runs of the same workflow on the same ref
 concurrency:
