@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - production
-      - staging
 
 # Cancel in-progress runs of the same workflow on the same ref
 concurrency:
@@ -121,7 +120,7 @@ jobs:
 
       - name: Turbo prebuild all deployable apps
         run: |
-          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/nitro-api
+          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=.apps/docs --filter=./apps/nitro-api
 
       - name: List built artifacts
         run: |
@@ -129,13 +128,14 @@ jobs:
           ls -1 apps/landing/.next || true
           ls -1 apps/learn/.next || true
           ls -1 apps/scout/.next || true
+          ls -1 apps/docs/.next || true
           ls -1 apps/nitro-api/.output || true
 
       - name: Package build artifacts
         run: |
           set -euo pipefail
             mkdir -p dist-artifacts
-          for APP in auth landing learn scout; do
+          for APP in auth landing learn scout docs; do
             if [ -d "apps/$APP/.next" ]; then
               (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
               echo "Packaged next-${APP}.tgz"
@@ -185,6 +185,14 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+      - name: Upload artifact docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-docs
+          path: dist-artifacts/next-docs.tgz
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Upload artifact nitro
         uses: actions/upload-artifact@v4
         with:
@@ -210,6 +218,9 @@ jobs:
             webhook_key: WEBHOOK_URL_LEARN
           - app: scout
             webhook_key: WEBHOOK_URL_SCOUT
+          - app: docs
+            webhook_hey: WEBHOOK_URL_DOCS
+            
     steps:
       - name: Checkout
         uses: actions/checkout@v4
