@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.6
 ARG NODE_VERSION=18-alpine
 ARG PNPM_VERSION=9.0.0
 ARG APP=nitro-api
@@ -22,7 +23,9 @@ WORKDIR /repo
 
 # Copy workspace root manifests (only what is needed to resolve dependency graph)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY .npmrc .npmrc || true
+# Optionally include .npmrc if present (BuildKit bind mount); create empty placeholder if absent
+RUN --mount=type=bind,source=.npmrc,target=/tmp/.npmrc,required=false \
+    (cp /tmp/.npmrc .npmrc && echo "Using workspace .npmrc") || (echo "No .npmrc found; creating empty .npmrc placeholder" && touch .npmrc)
 
 # Copy all packages' package.json files
 COPY packages ./packages
@@ -72,7 +75,7 @@ WORKDIR /app
 
 # Copy root manifests (sometimes required for resolving workspace meta)
 COPY --from=build /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/turbo.json ./
-COPY --from=build /repo/.npmrc ./.npmrc || true
+COPY --from=build /repo/.npmrc ./.npmrc
 
 # Copy production node_modules
 COPY --from=build /repo/node_modules ./node_modules

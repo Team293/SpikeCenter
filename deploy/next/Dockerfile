@@ -1,14 +1,4 @@
-#
-# This Dockerfile is designed for this repository structure:
-#   /package.json                (workspace root with Turbo + pnpm)
-#   /pnpm-workspace.yaml
-#   /turbo.json
-#   /apps/<app>/package.json     (Next.js app)
-#   /packages/*/package.json     (shared workspace packages)
-#
-# It builds ONE Next.js app per image, selected via the build arg APP.
-# You can build separate images for each site (auth, landing, learn, scout, etc.)
-# and push them to distinct container registries (e.g. GHCR).
+# syntax=docker/dockerfile:1.6
 
 ARG NODE_VERSION=18-alpine
 ARG PNPM_VERSION=9.0.0
@@ -36,8 +26,9 @@ WORKDIR /repo
 
 # Copy only the dependency graph first (maximize layer caching)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-# Optional config files (do not fail if missing)
-COPY .npmrc .npmrc || true
+# Optionally bring in .npmrc if it exists (non-fatal if absent)
+RUN --mount=type=bind,source=.npmrc,target=/tmp/.npmrc,required=false \
+    (cp /tmp/.npmrc .npmrc && echo "Using workspace .npmrc") || (echo "No .npmrc found; creating empty placeholder" && touch .npmrc)
 
 # Copy all workspace package manifests (no source yet)
 # This pattern copies only the package.json files for dependency resolution.
@@ -90,18 +81,15 @@ WORKDIR /app
 
 # Copy root manifests (some Next.js runtime code still resolves workspace metadata)
 COPY --from=build /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/turbo.json ./
-COPY --from=build /repo/.npmrc ./.npmrc || true
+COPY --from=build /repo/.npmrc ./.npmrc
 
 # Copy production node_modules (already pruned)
 COPY --from=build /repo/node_modules ./node_modules
 
 # Copy the built app artifacts and required runtime files
 # .next (build output), public assets, next config, package.json
-COPY --from=build /repo/apps/${APP}/.next ./apps/${APP}/.next
-COPY --from=build /repo/apps/${APP}/public ./apps/${APP}/public 2>/dev/null || true
-COPY --from=build /repo/apps/${APP}/next.config.* ./apps/${APP}/ 2>/dev/null || true
-COPY --from=build /repo/apps/${APP}/package.json ./apps/${APP}/package.json
-COPY --from=build /repo/apps/${APP}/middleware.* ./apps/${APP}/ 2>/dev/null || true
+# Copy entire app directory (contains .next, public, configs, middleware, package.json)
+COPY --from=build /repo/apps/${APP} ./apps/${APP}
 
 # Copy any built output / runtime code for shared packages that may be needed at runtime.
 # If packages serve code directly from src/ at runtime, copy src instead or mount at runtime.
