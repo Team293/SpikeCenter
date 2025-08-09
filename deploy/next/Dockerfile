@@ -132,6 +132,6 @@ COPY --from=prod-deps /repo/packages ./packages
 # Set working directory to the selected app for convenience
 WORKDIR /app/apps/${APP}
 
-EXPOSE 3000
+EXPOSE 80
 
-CMD ["pnpm", "start"]
+CMD ["pnpm", "start", "--", "-p", "80"]
