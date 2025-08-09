@@ -137,7 +137,7 @@ jobs:
             mkdir -p dist-artifacts
           for APP in auth landing learn scout; do
             if [ -d "apps/$APP/.next" ]; then
-              (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}.tgz" .next)
+              (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
               echo "Packaged next-${APP}.tgz"
             else
               echo "Missing .next for $APP" >&2
@@ -145,7 +145,7 @@ jobs:
             fi
           done
           if [ -d "apps/nitro-api/.output" ]; then
-            (cd apps/nitro-api && tar -czf "../../dist-artifacts/nitro-api.tgz" .output)
+            (cd apps/nitro-api && tar -czf "../../dist-artifacts/nitro-api.tgz" .output $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
             echo "Packaged nitro-api.tgz"
           else
             echo "Missing .output for nitro-api" >&2

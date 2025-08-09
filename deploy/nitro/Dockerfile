@@ -109,6 +109,13 @@ COPY --from=prod-deps /repo/packages ./packages
 COPY --from=build /repo/apps/${APP}/.output ./apps/${APP}/.output
 # Optionally keep the app's package.json for reference / debugging
 COPY --from=build /repo/apps/${APP}/package.json ./apps/${APP}/package.json
+# If only a production env file was shipped, promote it to .env for runtime code expecting .env
+RUN if [ -d "./apps/${APP}" ]; then \
+    if [ ! -f "./apps/${APP}/.env" ] && [ -f "./apps/${APP}/.env.production" ]; then \
+    echo "No .env found; using .env.production as .env"; \
+    cp ./apps/${APP}/.env.production ./apps/${APP}/.env; \
+    fi; \
+    fi
 
 # Switch to the Nitro output directory for runtime execution convenience
 WORKDIR /app/apps/${APP}

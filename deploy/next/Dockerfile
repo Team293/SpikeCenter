@@ -113,6 +113,13 @@ COPY --from=prod-deps /repo/node_modules ./node_modules
 
 # Copy the built app artifacts and required runtime files
 COPY --from=build /repo/apps/${APP} ./apps/${APP}
+# If only a production env file was shipped in the artifact, promote it to .env
+RUN if [ -d "./apps/${APP}" ]; then \
+    if [ ! -f "./apps/${APP}/.env" ] && [ -f "./apps/${APP}/.env.production" ]; then \
+    echo "No .env found; using .env.production as .env"; \
+    cp ./apps/${APP}/.env.production ./apps/${APP}/.env; \
+    fi; \
+    fi
 
 # Copy any runtime code for shared packages that may be required
 COPY --from=prod-deps /repo/packages ./packages
