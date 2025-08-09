@@ -91,7 +91,7 @@ COPY packages ./packages
 # Copy target app manifest
 COPY apps/${APP}/package.json ./apps/${APP}/package.json
 # Install only production dependencies for the selected app and its graph
-RUN pnpm install --prod --frozen-lockfile --filter ./apps/${APP}
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts --filter ./apps/${APP}
 
 ###############################################################################
 # Stage 4: production runtime image
