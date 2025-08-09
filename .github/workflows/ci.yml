@@ -196,6 +196,7 @@ jobs:
   build-next:
     name: Build & push Next.js images (prebuilt)
     runs-on: ubuntu-latest
+    environment: production
     needs: prebuild
     timeout-minutes: 40
     strategy:
@@ -295,6 +296,7 @@ jobs:
   build-nitro:
     name: Build & push nitro-api image (prebuilt)
     runs-on: ubuntu-latest
+    environment: production
     needs: prebuild
     timeout-minutes: 25
     steps:
