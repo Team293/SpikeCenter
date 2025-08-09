@@ -45,7 +45,7 @@ RUN find packages -mindepth 2 -maxdepth 2 ! -name package.json -exec rm -rf {} +
 
 # Install all dependencies (including dev) for the whole graph
 # (We need dev deps for building TypeScript, etc.)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 ###############################################################################
 # Stage 2: build the selected app with Turbo (and its dependency graph)
@@ -58,6 +58,11 @@ ARG USE_PREBUILT
 COPY . .
 # Remove all other apps so their lifecycle scripts (e.g. prepare) cannot run during prune
 RUN find apps -mindepth 1 -maxdepth 1 ! -name "${APP}" -exec rm -rf {} +
+# Run previously skipped lifecycle scripts (postinstall) for the target app now that source is present.
+# Rebuild any native modules (noop if none), then run postinstall only if it exists.
+RUN pnpm rebuild --filter=./apps/${APP} || true \
+    && if grep -q '"postinstall"' apps/${APP}/package.json; then pnpm --filter=./apps/${APP} run postinstall || true; else echo "No postinstall script for ${APP}"; fi
+
 
 
 # (Optional) You can enable Turbo remote caching here by providing env vars/secrets.
