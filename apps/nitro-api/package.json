@@ -8,13 +8,13 @@
     "preview": "node .output/server/index.mjs"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "nitropack": "latest"
+    "@types/cors": "^2.8.19"
   },
   "dependencies": {
     "@falcondev-oss/nitro-trpc-event-handler": "^0.1.3",
     "@spike/api": "workspace:*",
     "@spike/auth": "workspace:*",
+    "nitropack": "latest",
     "cors": "^2.8.5",
     "nitro-cors": "^0.7.1"
   }

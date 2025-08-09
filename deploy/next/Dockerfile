@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.6
 
 ARG NODE_VERSION=18-alpine
-ARG PNPM_VERSION=9.0.0
+ARG PNPM_VERSION=10.14.0
 # APP must match a directory under /apps
 ARG APP=auth
 # Set to true to skip building inside Docker and use pre-built .next artifacts

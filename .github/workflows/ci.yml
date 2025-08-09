@@ -16,7 +16,7 @@ permissions:
   packages: write
 
 env:
-  PNPM_VERSION: 9.0.0
+  PNPM_VERSION: 10.14.0
   NODE_VERSION: 18.x
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

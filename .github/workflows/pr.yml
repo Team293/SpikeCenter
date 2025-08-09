@@ -14,7 +14,7 @@ permissions:
   packages: read
 
 env:
-  PNPM_VERSION: 9.0.0
+  PNPM_VERSION: 10.14.0
   NODE_VERSION: 18.x
   TURBO_TELEMETRY_DISABLED: 1
 

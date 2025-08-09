@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6
 ARG NODE_VERSION=18-alpine
-ARG PNPM_VERSION=9.0.0
+ARG PNPM_VERSION=10.14.0
 ARG APP=nitro-api
 ARG USE_PREBUILT=false
 
@@ -77,7 +77,7 @@ COPY packages ./packages
 # Copy target app manifest
 COPY apps/${APP}/package.json ./apps/${APP}/package.json
 # Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 ###############################################################################
 # Stage 4: Production runtime image
