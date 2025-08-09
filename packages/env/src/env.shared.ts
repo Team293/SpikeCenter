@@ -2,7 +2,7 @@ import z from 'zod';
 
 const sharedEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']),
-  API_BASE_URL: z.url(),
+  API_BASE_URL: z.string(),
   BASE_URL: z.string(),
 });
 
