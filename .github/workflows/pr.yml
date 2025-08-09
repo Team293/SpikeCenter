@@ -73,7 +73,7 @@ jobs:
 
       - name: Build image (ephemeral, not pushed)
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
+          IMAGE=ghcr.io/team293/${{ matrix.app }}
           TAG=pr-${{ github.sha }}
           echo "Building $IMAGE:$TAG (APP=${{ matrix.app }})"
           docker build \
