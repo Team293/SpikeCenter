@@ -82,6 +82,14 @@ jobs:
             -f Dockerfile .
           docker image ls $IMAGE:$TAG
 
+      - name: Build nitro-api image (no push on PR)
+        run: |
+          IMAGE=ghcr.io/team293/nitro-api
+          SHA_TAG=sha-${{ github.sha }}
+          echo "Building $IMAGE:$SHA_TAG (nitro-api)"
+          docker build -f deploy/nitro/Dockerfile -t $IMAGE:$SHA_TAG .
+          docker image ls $IMAGE:$SHA_TAG
+
       - name: Summary
         if: always()
         run: |
