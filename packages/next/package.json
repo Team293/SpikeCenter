@@ -1,0 +1,37 @@
+{
+  "name": "@spike/next",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    ".": "./src/index.ts",
+    "./actions": "./src/actions/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "devDependencies": {
+    "@spike/api": "workspace:*",
+    "@spike/env": "workspace:*",
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@trpc/client": "^11.4.3",
+    "next": "^15.4.1",
+    "zod": "^4.0.5"
+  }
+}

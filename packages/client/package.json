@@ -1,0 +1,37 @@
+{
+  "name": "@spike/client",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    ".": "./src/index.ts",
+    "./providers": "./src/providers.tsx"
+  },
+  "devDependencies": {
+    "@spike/env": "workspace:*",
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*",
+    "@spike/api": "workspace:*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.65.0",
+    "@trpc/client": "^11.4.3",
+    "@trpc/tanstack-react-query": "^11.4.3",
+    "@types/react": "19.1.0"
+  }
+}

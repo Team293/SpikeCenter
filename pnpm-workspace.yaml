@@ -1,3 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "tooling/*"
+  - "packages/features/*"
+  - "packages/platforms/*"

@@ -1,0 +1,36 @@
+{
+  "name": "@spike/env",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    "./env.server": "./src/env.server.ts",
+    "./env.shared": "./src/env.shared.ts"
+  },
+  "devDependencies": {
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.48.0",
+    "dotenv": "^17.2.0",
+    "dotenv-flow": "^4.1.0",
+    "find-up": "^7.0.0",
+    "zod": "^4.0.5"
+  }
+}

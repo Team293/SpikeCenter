@@ -1,0 +1,40 @@
+{
+  "name": "@spike/auth",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "migrate": "pnpm dlx @better-auth/cli@latest generate --output ../db/src/db/auth.ts --config src/auth.ts"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    ".": "./src/auth.ts",
+    "./verify-bearer": "./src/utils/verify-bearer.ts",
+    "./auth.server": "./src/auth.server.ts",
+    "./client": "./src/authClient.ts",
+    "./types": "./src/types.ts"
+  },
+  "devDependencies": {
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@better-auth/expo": "^1.3.4",
+    "@better-auth/stripe": "^1.2.12",
+    "@spike/db": "workspace:*",
+    "@spike/env": "workspace:*",
+    "better-auth": "^1.2.12"
+  }
+}

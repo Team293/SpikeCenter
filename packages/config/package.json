@@ -1,0 +1,34 @@
+{
+  "name": "@spike/config",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "migrate": "pnpm dlx @better-auth/cli@latest generate --output ../db/src/db/auth.ts --config src/auth.ts"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    "./billing.config": "./src/billing.config.ts",
+    "./paths.config": "./src/paths.config.ts"
+  },
+  "devDependencies": {
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "zod": "^4.0.5",
+    "@spike/env": "workspace:*"
+  }
+}

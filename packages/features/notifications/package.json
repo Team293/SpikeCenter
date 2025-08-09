@@ -1,0 +1,37 @@
+{
+  "name": "@spike/notifications",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "migrate": "pnpm dlx @better-auth/cli@latest generate --output ../db/src/db/auth.ts --config src/auth.ts"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    "./notifications.config": "./src/config/notifications.config.ts"
+  },
+  "devDependencies": {
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@spike/db": "workspace:*",
+    "@spike/env": "workspace:*",
+    "@types/react": "19.1.0",
+    "lucide-react": "^0.535.0",
+    "tsx": "^4.20.3",
+    "zod": "^4.0.5"
+  }
+}

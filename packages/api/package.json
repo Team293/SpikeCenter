@@ -1,0 +1,48 @@
+{
+  "name": "@spike/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    ".": "./src/index.ts",
+    "./context": "./src/context.ts",
+    "./schemas/project": "./src/routers/project/project.schema.ts"
+  },
+  "devDependencies": {
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*",
+    "@tanstack/react-query": "5.65.0",
+    "@spike/lms-platform": "workspace:*",
+    "next": "15.1.6",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "extends": [
+      "@spike/eslint-config/base",
+      "@spike/eslint-config/react"
+    ]
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@spike/db": "workspace:*",
+    "@spike/auth": "workspace:*",
+    "@trpc/server": "^11.4.3",
+    "zod": "^4.0.5"
+  }
+}

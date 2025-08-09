@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "spike-center",
+    "slug": "spike-center",
+    "version": "1.0.0",
+    "web": {
+      "favicon": "./src/assets/spike.png"
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "plugins": [],
+    "orientation": "portrait",
+    "icon": "./src/assets/spike.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/spike.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.team293.spike",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/spike.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.team293.spike"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "55d19bdb-b403-4024-b3e1-24361ca221be"
+      }
+    }
+  }
+}

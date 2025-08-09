@@ -1,0 +1,43 @@
+{
+  "name": "@spike/db",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "format": "prettier --check \"**/*.{ts,tsx}\"",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "pnpm exec drizzle-kit generate && pnpm exec drizzle-kit migrate",
+    "db:push": "pnpm exec drizzle-kit push",
+    "db:reset": "pnpm exec drizzle-kit push --force --config drizzle-empty.config.ts",
+    "db:migrate:hard": "pnpm run db:reset && pnpm run db:migrate",
+    "db:studio": "pnpm exec drizzle-kit studio"
+  },
+  "prettier": "@spike/prettier-config",
+  "exports": {
+    ".": "./src/index.ts",
+    "./providers": "./src/providers.tsx"
+  },
+  "devDependencies": {
+    "@spike/env": "workspace:*",
+    "@spike/eslint-config": "workspace:*",
+    "@spike/prettier-config": "workspace:*",
+    "@spike/tailwind-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "@types/pg": "^8.15.4",
+    "drizzle-kit": "^0.31.4"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "src/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "drizzle-orm": "0.44.4",
+    "pg": "^8.16.3",
+    "@spike/lms-platform": "workspace:*"
+  }
+}
