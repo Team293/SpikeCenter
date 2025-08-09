@@ -123,7 +123,7 @@ jobs:
 
       - name: Turbo prebuild all deployable apps
         run: |
-          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=.apps/docs --filter=./apps/nitro-api
+          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/docs --filter=./apps/nitro-api
 
       - name: List built artifacts
         run: |
