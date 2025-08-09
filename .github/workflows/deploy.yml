@@ -65,6 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     timeout-minutes: 30
+    environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -222,7 +223,7 @@ jobs:
           - app: scout
             webhook_key: WEBHOOK_URL_SCOUT
           - app: docs
-            webhook_hey: WEBHOOK_URL_DOCS
+            webhook_key: WEBHOOK_URL_DOCS
 
     steps:
       - name: Checkout
