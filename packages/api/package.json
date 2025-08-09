@@ -21,7 +21,7 @@
     "@spike/typescript-config": "workspace:*",
     "@tanstack/react-query": "5.65.0",
     "@spike/lms-platform": "workspace:*",
-    "next": "15.1.6",
+    "next": "15.2.4",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
