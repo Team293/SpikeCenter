@@ -59,14 +59,99 @@ jobs:
       - name: Lint (workspace)
         run: pnpm run lint
 
-  build:
-    name: Build & (conditionally) Push Docker Images
+  prebuild:
+    name: Prebuild monorepo applications
     runs-on: ubuntu-latest
     needs: lint
-    timeout-minutes: 45
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: prebuild-pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            prebuild-pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Turbo prebuild all deployable apps
+        run: |
+          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/nitro-api
+
+      - name: List built artifacts
+        run: |
+          ls -1 apps/auth/.next || true
+          ls -1 apps/landing/.next || true
+          ls -1 apps/learn/.next || true
+          ls -1 apps/scout/.next || true
+          ls -1 apps/nitro-api/.output || true
+
+      - name: Upload artifact auth
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-auth
+          path: apps/auth/.next
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact landing
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-landing
+          path: apps/landing/.next
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact learn
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-learn
+          path: apps/learn/.next
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact scout
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-scout
+          path: apps/scout/.next
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact nitro
+        uses: actions/upload-artifact@v4
+        with:
+          name: nitro-api
+          path: apps/nitro-api/.output
+          if-no-files-found: error
+          retention-days: 3
+
+  build-next:
+    name: Build & push Next.js images (prebuilt)
+    runs-on: ubuntu-latest
+    needs: prebuild
+    timeout-minutes: 40
     strategy:
-      # We need uppercase identifiers for webhook env var lookup but GitHub Actions
-      # does not provide toUpper(). Provide an explicit mapping instead.
       matrix:
         include:
           - app: auth
@@ -81,6 +166,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download prebuilt artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: next-${{ matrix.app }}
+          path: apps/${{ matrix.app }}/.next
+
+      - name: Verify prebuilt artifact
+        run: |
+          if [ ! -f "apps/${{ matrix.app }}/.next/BUILD_ID" ] && [ ! -d "apps/${{ matrix.app }}/.next/server" ]; then
+            echo "Prebuilt .next directory for ${{ matrix.app }} appears missing or incomplete."
+            ls -al apps/${{ matrix.app }}/.next || true
+            exit 1
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -92,10 +191,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build image from prebuilt artifacts
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
+          SHA_TAG=sha-${{ github.sha }}
+          echo "Building $IMAGE:$SHA_TAG using prebuilt artifacts"
+          docker build \
+            --build-arg APP=${{ matrix.app }} \
+            --build-arg USE_PREBUILT=true \
+            -t $IMAGE:$SHA_TAG \
+            -f deploy/next/Dockerfile .
+          docker image ls $IMAGE:$SHA_TAG
+
       - name: Push image (production/staging pushes)
         if: github.event_name == 'push'
         run: |
-          IMAGE=ghcr.io/team293/${{ matrix.app }}
+          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
           SHA_TAG=sha-${{ github.sha }}
           docker push $IMAGE:$SHA_TAG
           if [ "${{ github.ref }}" = "refs/heads/production" ]; then
@@ -106,18 +217,17 @@ jobs:
             docker push $IMAGE:staging
           fi
 
-      - name: Ping webhook
+      - name: Ping webhook (if configured)
         if: github.event_name == 'push'
         env:
           APP_NAME: ${{ matrix.app }}
-          # Resolve dynamic webhook URL via the explicit matrix mapping (no toUpper available in expressions)
           WEBHOOK_URL: ${{ env[matrix.webhook_key] }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/team293/${{ matrix.app }}:sha-${{ github.sha }}" \
+              -d "$(jq -n --arg image "ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
                                --arg app "${{ matrix.app }}" \
@@ -129,13 +239,27 @@ jobs:
           fi
 
   build-nitro:
-    name: Build & (conditionally) Push nitro-api Image
+    name: Build & push nitro-api image (prebuilt)
     runs-on: ubuntu-latest
-    needs: lint
-    timeout-minutes: 30
+    needs: prebuild
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download prebuilt nitro artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nitro-api
+          path: apps/nitro-api/.output
+
+      - name: Verify nitro artifact
+        run: |
+          if [ ! -f "apps/nitro-api/.output/server/index.mjs" ]; then
+            echo "Nitro .output missing expected server entry."
+            find apps/nitro-api/.output -maxdepth 3 -type f | head -n 50
+            exit 1
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -148,10 +272,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push nitro-api image (production/staging pushes)
+      - name: Build nitro image from prebuilt artifacts
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/nitro-api
+          SHA_TAG=sha-${{ github.sha }}
+            echo "Building $IMAGE:$SHA_TAG using prebuilt artifacts"
+          docker build \
+            --build-arg APP=nitro-api \
+            --build-arg USE_PREBUILT=true \
+            -t $IMAGE:$SHA_TAG \
+            -f deploy/nitro/Dockerfile .
+          docker image ls $IMAGE:$SHA_TAG
+
+      - name: Push nitro image (production/staging pushes)
         if: github.event_name == 'push'
         run: |
-          IMAGE=ghcr.io/team293/nitro-api
+          IMAGE=ghcr.io/${{ github.repository_owner }}/nitro-api
           SHA_TAG=sha-${{ github.sha }}
           docker push $IMAGE:$SHA_TAG
           if [ "${{ github.ref }}" = "refs/heads/production" ]; then
@@ -162,7 +298,7 @@ jobs:
             docker push $IMAGE:staging
           fi
 
-      - name: Ping webhook
+      - name: Ping webhook (if configured)
         if: github.event_name == 'push'
         env:
           APP_NAME: nitro-api
@@ -172,7 +308,7 @@ jobs:
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/team293/nitro-api:sha-${{ github.sha }}" \
+              -d "$(jq -n --arg image "ghcr.io/${{ github.repository_owner }}/nitro-api:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
                                --arg app "${APP_NAME}" \

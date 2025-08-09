@@ -1,6 +1,7 @@
 ARG NODE_VERSION=18-alpine
 ARG PNPM_VERSION=9.0.0
 ARG APP=nitro-api
+ARG USE_PREBUILT=false
 
 ###############################################################################
 # Stage 1: Base dependency graph installation (maximize layer caching)
@@ -8,6 +9,7 @@ ARG APP=nitro-api
 FROM node:${NODE_VERSION} AS base-deps
 ARG PNPM_VERSION
 ARG APP
+ARG USE_PREBUILT
 
 ENV CI=true \
     PNPM_HOME=/root/.local/share/pnpm \
@@ -38,6 +40,7 @@ RUN pnpm install --frozen-lockfile
 ###############################################################################
 FROM base-deps AS build
 ARG APP
+ARG USE_PREBUILT
 
 # Copy the full repository (source code)
 COPY . .
@@ -45,7 +48,7 @@ COPY . .
 # Build only the specified Nitro app (Turbo optional; fall back if not configured)
 # We try turbo first for consistency with monorepo; if no turbo task defined for the app
 # you may switch to: RUN pnpm --filter ${APP} run build
-RUN (pnpm turbo run build --filter=${APP}) || (echo "Turbo build fallback -> pnpm build" && pnpm --filter ${APP} run build)
+RUN if [ "${USE_PREBUILT}" != "true" ]; then (pnpm turbo run build --filter=${APP}) || (echo "Turbo build fallback -> pnpm build" && pnpm --filter ${APP} run build); else echo "Skipping build (USE_PREBUILT=true); expecting prebuilt apps/${APP}/.output"; fi
 
 # After build, .output will exist at apps/${APP}/.output
 # Prune to production dependencies only

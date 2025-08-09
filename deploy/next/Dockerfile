@@ -14,6 +14,8 @@ ARG NODE_VERSION=18-alpine
 ARG PNPM_VERSION=9.0.0
 # APP must match a directory under /apps
 ARG APP=auth
+# Set to true to skip building inside Docker and use pre-built .next artifacts
+ARG USE_PREBUILT=false
 
 ###############################################################################
 # Stage 1: base dependencies (install only what's needed to resolve workspace)
@@ -21,6 +23,7 @@ ARG APP=auth
 FROM node:${NODE_VERSION} AS base-deps
 ARG PNPM_VERSION
 ARG APP
+ARG USE_PREBUILT
 
 ENV CI=true \
     PNPM_HOME=/root/.local/share/pnpm \
@@ -54,6 +57,7 @@ RUN pnpm install --frozen-lockfile
 ###############################################################################
 FROM base-deps AS build
 ARG APP
+ARG USE_PREBUILT
 
 # Copy the full repo (now including source)
 COPY . .
@@ -63,7 +67,7 @@ COPY . .
 
 # Build ONLY the selected app (Turbo will build its dependent packages first)
 # Using explicit --filter keeps build scope tight if other apps exist.
-RUN pnpm turbo run build --filter=${APP}
+RUN if [ "${USE_PREBUILT}" != "true" ]; then pnpm turbo run build --filter=${APP}; else echo "Skipping Docker build step (USE_PREBUILT=true). Expecting prebuilt apps/${APP}/.next"; fi
 
 # After build, prune dev dependencies to prepare for runtime
 RUN pnpm prune --prod
