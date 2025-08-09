@@ -14,12 +14,12 @@
     "./providers": "./src/providers.tsx"
   },
   "devDependencies": {
+    "@spike/api": "workspace:*",
     "@spike/env": "workspace:*",
     "@spike/eslint-config": "workspace:*",
     "@spike/prettier-config": "workspace:*",
     "@spike/tailwind-config": "workspace:*",
-    "@spike/typescript-config": "workspace:*",
-    "@spike/api": "workspace:*"
+    "@spike/typescript-config": "workspace:*"
   },
   "typesVersions": {
     "*": {
@@ -29,9 +29,9 @@
     }
   },
   "dependencies": {
-    "@tanstack/react-query": "5.65.0",
-    "@trpc/client": "^11.4.3",
-    "@trpc/tanstack-react-query": "^11.4.3",
-    "@types/react": "19.1.0"
+    "@tanstack/react-query": "catalog:",
+    "@trpc/client": "catalog:",
+    "@trpc/tanstack-react-query": "catalog:",
+    "@types/react": "19.1.1"
   }
 }

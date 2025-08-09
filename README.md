@@ -65,4 +65,4 @@ We welcome contributions! Please follow these steps:
 2. Create a new branch for your feature or bug
 3. Make your changes and commit them with clear messages.
 4. Push your changes to your fork.
-5. Create a pull request against the `main` branch of the original repository.
+5. Create a pull request against the `staging` branch of the original repository.

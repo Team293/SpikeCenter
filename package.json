@@ -4,24 +4,30 @@
   "scripts": {
     "build": "NODE_ENV=production dotenvx run --convention=nextjs -- turbo run build",
     "dev": "NODE_ENV=development dotenvx run --convention=nextjs -- turbo run dev",
-    "db:dev": "docker start spike-center-dev || docker run --name spike-center-dev -e POSTGRES_PASSWORD=123456789 -p 7501:5432 -d postgres",
+    "dev:setup": "docker start spike-center-dev || docker run --name spike-center-dev -e POSTGRES_PASSWORD=123456789 -p 7501:5432 -d postgres",
     "lint": "dotenvx run --convention=nextjs -- turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "dotenvx run --convention=nextjs -- turbo run check-types"
   },
   "devDependencies": {
-    "drizzle-orm": "^0.44.4",
+    "drizzle-orm": "catalog:",
     "prettier": "^3.6.2",
     "turbo": "^2.5.5",
-    "typescript": "5.8.3"
+    "typescript": "catalog:"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.12.1",
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.48.0",
-    "pg": "^8.16.3",
+    "pg": "catalog:",
     "validator": "13.7.0"
+  },
+  "catalogs": {
+    "default": {
+      "react": "19.1.1",
+      "react-dom": "19.1.1"
+    }
   }
 }

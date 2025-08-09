@@ -30,8 +30,8 @@
     }
   },
   "dependencies": {
-    "@trpc/client": "^11.4.3",
-    "next": "^15.4.1",
-    "zod": "^4.0.5"
+    "@trpc/client": "catalog:",
+    "next": "catalog:",
+    "zod": "catalog:"
   }
 }

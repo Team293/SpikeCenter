@@ -35,6 +35,6 @@
     "@better-auth/stripe": "^1.2.12",
     "@spike/db": "workspace:*",
     "@spike/env": "workspace:*",
-    "better-auth": "^1.2.12"
+    "better-auth": "catalog:"
   }
 }

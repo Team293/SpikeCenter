@@ -17,7 +17,7 @@
     "@spike/prettier-config": "workspace:*",
     "@spike/tailwind-config": "workspace:*",
     "@spike/typescript-config": "workspace:*",
-    "@types/react": "19.1.0"
+    "@types/react": "19.1.1"
   },
   "typesVersions": {
     "*": {
@@ -28,8 +28,8 @@
   },
   "dependencies": {
     "@spike/ui": "workspace:*",
-    "react": "^19.1.1",
+    "react": "catalog:",
     "react-native": "^0.80.2",
-    "zod": "^4.0.5"
+    "zod": "catalog:"
   }
 }

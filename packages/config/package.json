@@ -28,7 +28,7 @@
     }
   },
   "dependencies": {
-    "zod": "^4.0.5",
+    "zod": "catalog:",
     "@spike/env": "workspace:*"
   }
 }
