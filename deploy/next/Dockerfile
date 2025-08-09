@@ -27,8 +27,12 @@ WORKDIR /repo
 # Copy only the dependency graph first (maximize layer caching)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 # Optionally bring in .npmrc if it exists (non-fatal if absent)
-RUN --mount=type=bind,source=.npmrc,target=/tmp/.npmrc,required=false \
-    (cp /tmp/.npmrc .npmrc && echo "Using workspace .npmrc") || (echo "No .npmrc found; creating empty placeholder" && touch .npmrc)
+COPY .npmrc* ./
+RUN if [ -f .npmrc ]; then \
+    echo "Using workspace .npmrc"; \
+    else \
+    echo "No .npmrc found; creating empty .npmrc placeholder" && touch .npmrc; \
+    fi
 
 # Copy all workspace package manifests (no source yet)
 # This pattern copies only the package.json files for dependency resolution.

@@ -24,9 +24,12 @@ WORKDIR /repo
 # Copy workspace root manifests (only what is needed to resolve dependency graph)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 # Optionally include .npmrc if present (BuildKit bind mount); create empty placeholder if absent
-RUN --mount=type=bind,source=.npmrc,target=/tmp/.npmrc,required=false \
-    (cp /tmp/.npmrc .npmrc && echo "Using workspace .npmrc") || (echo "No .npmrc found; creating empty .npmrc placeholder" && touch .npmrc)
-
+COPY .npmrc* ./
+RUN if [ -f .npmrc ]; then \
+    echo "Using workspace .npmrc"; \
+    else \
+    echo "No .npmrc found; creating empty .npmrc placeholder" && touch .npmrc; \
+    fi
 # Copy all packages' package.json files
 COPY packages ./packages
 # Copy target Nitro app manifest
