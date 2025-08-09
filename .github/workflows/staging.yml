@@ -18,6 +18,8 @@ permissions:
 
 env:
   NODE_VERSION: 18.x
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TELEMETRY_DISABLED: 1
 
 jobs:
@@ -53,6 +55,33 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate environment files
+        run: |
+          set -euo pipefail
+          for APP in auth landing learn scout nitro-api; do
+            mkdir -p "apps/$APP"
+            {
+              echo "BETTER_AUTH_URL=${BETTER_AUTH_URL}"
+              echo "DATABASE_URL=${DATABASE_URL}"
+              echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+              echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}"
+              echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
+              echo "GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}"
+              echo "GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}"
+            } > "apps/$APP/.env"
+            cp "apps/$APP/.env" "apps/$APP/.env.production"
+            echo "Created env files for $APP"
+          done
+        env:
+          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
 
       - name: Lint (workspace)
         run: pnpm run lint
