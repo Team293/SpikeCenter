@@ -57,11 +57,30 @@ COPY . .
 RUN if [ "${USE_PREBUILT}" != "true" ]; then (pnpm turbo run build --filter=${APP}) || (echo "Turbo build fallback -> pnpm build" && pnpm --filter ${APP} run build); else echo "Skipping build (USE_PREBUILT=true); expecting prebuilt apps/${APP}/.output"; fi
 
 # After build, .output will exist at apps/${APP}/.output
-# Prune to production dependencies only
-RUN pnpm prune --prod
+#
+# (Skip pruning here; we'll create a clean production-only install in a separate stage.)
+###############################################################################
+# Stage 3: Production dependencies (install only prod graph)
+###############################################################################
+FROM node:${NODE_VERSION} AS prod-deps
+ARG PNPM_VERSION
+ARG APP
+ENV NODE_ENV=production \
+    PNPM_HOME=/root/.local/share/pnpm
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+WORKDIR /repo
+# Copy manifests needed to resolve production dependency graph
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY --from=build /repo/.npmrc .npmrc
+# Copy workspace packages (source needed if they are not fully bundled by Nitro)
+COPY packages ./packages
+# Copy target app manifest
+COPY apps/${APP}/package.json ./apps/${APP}/package.json
+# Install only production dependencies
+RUN pnpm install --prod --frozen-lockfile
 
 ###############################################################################
-# Stage 3: Production runtime image
+# Stage 4: Production runtime image
 ###############################################################################
 FROM node:${NODE_VERSION} AS runtime
 ARG PNPM_VERSION
@@ -77,15 +96,14 @@ RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 WORKDIR /app
 
 # Copy root manifests (sometimes required for resolving workspace meta)
-COPY --from=build /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/turbo.json ./
-COPY --from=build /repo/.npmrc ./.npmrc
+COPY --from=prod-deps /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/turbo.json ./
+COPY --from=prod-deps /repo/.npmrc ./.npmrc
 
 # Copy production node_modules
-COPY --from=build /repo/node_modules ./node_modules
+COPY --from=prod-deps /repo/node_modules ./node_modules
 
-# Copy any runtime-needed workspace package source (if Nitro left externals unbundled)
-# If image size is critical and you confirm all workspace code is bundled, you can remove this.
-COPY --from=build /repo/packages ./packages
+# Copy any runtime-needed workspace package source (if Nitro left externals were left unbundled)
+COPY --from=prod-deps /repo/packages ./packages
 
 # Copy compiled Nitro output only (no source needed at runtime)
 COPY --from=build /repo/apps/${APP}/.output ./apps/${APP}/.output

@@ -56,6 +56,9 @@ ARG USE_PREBUILT
 
 # Copy the full repo (now including source)
 COPY . .
+# Remove all other apps so their lifecycle scripts (e.g. prepare) cannot run during prune
+RUN find apps -mindepth 1 -maxdepth 1 ! -name "${APP}" -exec rm -rf {} +
+
 
 # (Optional) You can enable Turbo remote caching here by providing env vars/secrets.
 # ENV TURBO_TOKEN=... TURBO_TEAM=...
