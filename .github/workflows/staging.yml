@@ -80,7 +80,7 @@ jobs:
           docker build \
             --build-arg APP=${{ matrix.app }} \
             -t $IMAGE:$TAG \
-            -f Dockerfile .
+            -f deploy/next/Dockerfile .
           docker image ls $IMAGE:$TAG
 
       - name: Build nitro-api image (no push on PR)
