@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
       - production
@@ -56,8 +54,18 @@ jobs:
     needs: lint
     timeout-minutes: 45
     strategy:
+      # We need uppercase identifiers for webhook env var lookup but GitHub Actions
+      # does not provide toUpper(). Provide an explicit mapping instead.
       matrix:
-        app: [auth, landing, learn, scout]
+        include:
+          - app: auth
+            webhook_key: WEBHOOK_URL_AUTH
+          - app: landing
+            webhook_key: WEBHOOK_URL_LANDING
+          - app: learn
+            webhook_key: WEBHOOK_URL_LEARN
+          - app: scout
+            webhook_key: WEBHOOK_URL_SCOUT
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,7 +110,8 @@ jobs:
         if: github.event_name == 'push'
         env:
           APP_NAME: ${{ matrix.app }}
-          WEBHOOK_URL: ${{ env[format('WEBHOOK_URL_{0}', toUpper(matrix.app))] }}
+          # Resolve dynamic webhook URL via the explicit matrix mapping (no toUpper available in expressions)
+          WEBHOOK_URL: ${{ env[matrix.webhook_key] }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
