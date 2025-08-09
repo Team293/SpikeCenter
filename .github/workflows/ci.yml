@@ -133,11 +133,33 @@ jobs:
           ls -1 apps/scout/.next || true
           ls -1 apps/nitro-api/.output || true
 
+      - name: Package build artifacts
+        run: |
+          set -euo pipefail
+            mkdir -p dist-artifacts
+          for APP in auth landing learn scout; do
+            if [ -d "apps/$APP/.next" ]; then
+              (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}.tgz" .next)
+              echo "Packaged next-${APP}.tgz"
+            else
+              echo "Missing .next for $APP" >&2
+              exit 1
+            fi
+          done
+          if [ -d "apps/nitro-api/.output" ]; then
+            (cd apps/nitro-api && tar -czf "../../dist-artifacts/nitro-api.tgz" .output)
+            echo "Packaged nitro-api.tgz"
+          else
+            echo "Missing .output for nitro-api" >&2
+            exit 1
+          fi
+          ls -lh dist-artifacts
+
       - name: Upload artifact auth
         uses: actions/upload-artifact@v4
         with:
           name: next-auth
-          path: apps/auth/.next/**
+          path: dist-artifacts/next-auth.tgz
           if-no-files-found: error
           retention-days: 3
 
@@ -145,7 +167,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: next-landing
-          path: apps/landing/.next/**
+          path: dist-artifacts/next-landing.tgz
           if-no-files-found: error
           retention-days: 3
 
@@ -153,7 +175,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: next-learn
-          path: apps/learn/.next/**
+          path: dist-artifacts/next-learn.tgz
           if-no-files-found: error
           retention-days: 3
 
@@ -161,7 +183,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: next-scout
-          path: apps/scout/.next/**
+          path: dist-artifacts/next-scout.tgz
           if-no-files-found: error
           retention-days: 3
 
@@ -169,7 +191,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nitro-api
-          path: apps/nitro-api/.output/**
+          path: dist-artifacts/nitro-api.tgz
           if-no-files-found: error
           retention-days: 3
 
@@ -197,7 +219,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: next-${{ matrix.app }}
-          path: apps/${{ matrix.app }}/.next
+          path: artifact-download
+
+      - name: Extract prebuilt artifact
+        run: |
+          set -e
+          mkdir -p apps/${{ matrix.app }}
+          tar -xzf artifact-download/next-${{ matrix.app }}.tgz -C apps/${{ matrix.app }}
+          test -d "apps/${{ matrix.app }}/.next" || (echo ".next not extracted" && ls -al apps/${{ matrix.app }} && exit 1)
 
       - name: Verify prebuilt artifact
         run: |
@@ -278,7 +307,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nitro-api
-          path: apps/nitro-api/.output
+          path: artifact-download-nitro
+
+      - name: Extract nitro artifact
+        run: |
+          set -e
+          mkdir -p apps/nitro-api
+          tar -xzf artifact-download-nitro/nitro-api.tgz -C apps/nitro-api
+          test -d "apps/nitro-api/.output" || (echo ".output not extracted" && ls -al apps/nitro-api && exit 1)
 
       - name: Verify nitro artifact
         run: |
