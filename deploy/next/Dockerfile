@@ -67,11 +67,29 @@ RUN find apps -mindepth 1 -maxdepth 1 ! -name "${APP}" -exec rm -rf {} +
 # Using explicit --filter keeps build scope tight if other apps exist.
 RUN if [ "${USE_PREBUILT}" != "true" ]; then pnpm turbo run build --filter=${APP}; else echo "Skipping Docker build step (USE_PREBUILT=true). Expecting prebuilt apps/${APP}/.next"; fi
 
-# After build, prune dev dependencies to prepare for runtime
-RUN pnpm prune --prod
+# After build, create separate production dependency layer instead of in-place prune
+###############################################################################
+# Stage 3: production dependencies (install only prod graph for target app)
+###############################################################################
+FROM node:${NODE_VERSION} AS prod-deps
+ARG PNPM_VERSION
+ARG APP
+ENV NODE_ENV=production \
+    PNPM_HOME=/root/.local/share/pnpm
+RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+WORKDIR /repo
+# Copy manifests needed to resolve dependency graph
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY --from=build /repo/.npmrc .npmrc
+# Copy workspace packages (source needed if shared code not fully bundled)
+COPY packages ./packages
+# Copy target app manifest
+COPY apps/${APP}/package.json ./apps/${APP}/package.json
+# Install only production dependencies for the selected app and its graph
+RUN pnpm install --prod --frozen-lockfile --filter ./apps/${APP}
 
 ###############################################################################
-# Stage 3: create a pruned production filesystem for just the selected app
+# Stage 4: production runtime image
 ###############################################################################
 FROM node:${NODE_VERSION} AS runtime
 ARG PNPM_VERSION
@@ -87,20 +105,17 @@ RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 WORKDIR /app
 
 # Copy root manifests (some Next.js runtime code still resolves workspace metadata)
-COPY --from=build /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/turbo.json ./
-COPY --from=build /repo/.npmrc ./.npmrc
+COPY --from=prod-deps /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml /repo/turbo.json ./
+COPY --from=prod-deps /repo/.npmrc ./.npmrc
 
-# Copy production node_modules (already pruned)
-COPY --from=build /repo/node_modules ./node_modules
+# Copy production node_modules
+COPY --from=prod-deps /repo/node_modules ./node_modules
 
 # Copy the built app artifacts and required runtime files
-# .next (build output), public assets, next config, package.json
-# Copy entire app directory (contains .next, public, configs, middleware, package.json)
 COPY --from=build /repo/apps/${APP} ./apps/${APP}
 
-# Copy any built output / runtime code for shared packages that may be needed at runtime.
-# If packages serve code directly from src/ at runtime, copy src instead or mount at runtime.
-COPY --from=build /repo/packages ./packages
+# Copy any runtime code for shared packages that may be required
+COPY --from=prod-deps /repo/packages ./packages
 
 # Set working directory to the selected app for convenience
 WORKDIR /app/apps/${APP}
@@ -110,7 +125,4 @@ EXPOSE 3000
 # A simple healthcheck hitting Next.js default path
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:${PORT}/api/health || exit 1
 
-# Default command: start Next.js server
-
-# We invoke via pnpm to respect the app's start script (typically `next start`)
 CMD ["pnpm", "start"]
