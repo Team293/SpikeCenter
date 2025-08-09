@@ -10,10 +10,10 @@
  * to keep linting fast and to prevent TypeScript project lookup issues.
  */
 
-const { config: reactInternalConfig } = require('@spike/eslint-config/react-internal');
+import { config as reactInternalConfig } from '@spike/eslint-config/react-internal';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
-module.exports = [
+export default [
   // Global ignores specific to this package
   {
     ignores: [

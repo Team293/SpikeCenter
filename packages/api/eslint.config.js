@@ -1,7 +1,7 @@
-const { nextJsConfig } = require('@spike/eslint-config/next-js');
+import { nextJsConfig } from '@spike/eslint-config/next-js';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
-module.exports = [
+export default [
   // Package-level ignores
   {
     ignores: [

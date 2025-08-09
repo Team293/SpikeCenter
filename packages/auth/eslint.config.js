@@ -11,10 +11,10 @@
  * packages that only need syntactic rules).
  */
 
-const { config: reactInternalConfig } = require('@spike/eslint-config/react-internal');
+import { config as reactInternalConfig } from '@spike/eslint-config/react-internal';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
-module.exports = [
+export default [
   // Package-level ignores
   {
     ignores: [
