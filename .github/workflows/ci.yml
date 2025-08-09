@@ -92,21 +92,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build image (no push on PR)
-        run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
-          SHA_TAG=sha-${{ github.sha }}
-          echo "Building $IMAGE:$SHA_TAG (APP=${{ matrix.app }})"
-          docker build \
-            --build-arg APP=${{ matrix.app }} \
-            -t $IMAGE:$SHA_TAG \
-            -f deploy/next/Dockerfile .
-          docker image ls $IMAGE:$SHA_TAG
-
       - name: Push image (production/staging pushes)
         if: github.event_name == 'push'
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
+          IMAGE=ghcr.io/team293/${{ matrix.app }}
           SHA_TAG=sha-${{ github.sha }}
           docker push $IMAGE:$SHA_TAG
           if [ "${{ github.ref }}" = "refs/heads/production" ]; then
@@ -117,7 +106,7 @@ jobs:
             docker push $IMAGE:staging
           fi
 
-      - name: Ping webhook (if configured)
+      - name: Ping webhook
         if: github.event_name == 'push'
         env:
           APP_NAME: ${{ matrix.app }}
@@ -128,7 +117,7 @@ jobs:
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}:sha-${{ github.sha }}" \
+              -d "$(jq -n --arg image "ghcr.io/team293/${{ matrix.app }}:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
                                --arg app "${{ matrix.app }}" \
@@ -159,18 +148,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build nitro-api image (no push on PR)
-        run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/nitro-api
-          SHA_TAG=sha-${{ github.sha }}
-          echo "Building $IMAGE:$SHA_TAG (nitro-api)"
-          docker build -f deploy/nitro/Dockerfile -t $IMAGE:$SHA_TAG .
-          docker image ls $IMAGE:$SHA_TAG
-
       - name: Push nitro-api image (production/staging pushes)
         if: github.event_name == 'push'
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/nitro-api
+          IMAGE=ghcr.io/team293/nitro-api
           SHA_TAG=sha-${{ github.sha }}
           docker push $IMAGE:$SHA_TAG
           if [ "${{ github.ref }}" = "refs/heads/production" ]; then
@@ -181,7 +162,7 @@ jobs:
             docker push $IMAGE:staging
           fi
 
-      - name: Ping webhook (if configured)
+      - name: Ping webhook
         if: github.event_name == 'push'
         env:
           APP_NAME: nitro-api
@@ -191,7 +172,7 @@ jobs:
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/${{ github.repository_owner }}/nitro-api:sha-${{ github.sha }}" \
+              -d "$(jq -n --arg image "ghcr.io/team293/nitro-api:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
                                --arg app "${APP_NAME}" \
