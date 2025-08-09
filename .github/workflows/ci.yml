@@ -18,7 +18,8 @@ permissions:
 env:
   PNPM_VERSION: 9.0.0
   NODE_VERSION: 18.x
-  # Adjust if you want to change Turbo's remote caching later
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TELEMETRY_DISABLED: 1
 
 jobs:
@@ -249,7 +250,7 @@ jobs:
 
       - name: Build image from prebuilt artifacts
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
+          IMAGE=ghcr.io/team293/${{ matrix.app }}
           SHA_TAG=sha-${{ github.sha }}
           echo "Building $IMAGE:$SHA_TAG using prebuilt artifacts"
           docker build \
@@ -262,7 +263,7 @@ jobs:
       - name: Push image (production/staging pushes)
         if: github.event_name == 'push'
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}
+          IMAGE=ghcr.io/team293/${{ matrix.app }}
           SHA_TAG=sha-${{ github.sha }}
           docker push $IMAGE:$SHA_TAG
           if [ "${{ github.ref }}" = "refs/heads/production" ]; then
@@ -283,7 +284,7 @@ jobs:
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/${{ github.repository_owner }}/${{ matrix.app }}:sha-${{ github.sha }}" \
+              -d "$(jq -n --arg image "ghcr.io/team293/${{ matrix.app }}:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
                                --arg app "${{ matrix.app }}" \
@@ -337,7 +338,7 @@ jobs:
 
       - name: Build nitro image from prebuilt artifacts
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/nitro-api
+          IMAGE=ghcr.io/team293/nitro-api
           SHA_TAG=sha-${{ github.sha }}
             echo "Building $IMAGE:$SHA_TAG using prebuilt artifacts"
           docker build \
@@ -350,7 +351,7 @@ jobs:
       - name: Push nitro image (production/staging pushes)
         if: github.event_name == 'push'
         run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/nitro-api
+          IMAGE=ghcr.io/team293/nitro-api
           SHA_TAG=sha-${{ github.sha }}
           docker push $IMAGE:$SHA_TAG
           if [ "${{ github.ref }}" = "refs/heads/production" ]; then
@@ -371,7 +372,7 @@ jobs:
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/${{ github.repository_owner }}/nitro-api:sha-${{ github.sha }}" \
+              -d "$(jq -n --arg image "ghcr.io/team293/nitro-api:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
                                --arg app "${APP_NAME}" \
