@@ -671,6 +671,9 @@ importers:
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.65.0(react@19.1.1)
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
       next:
         specifier: 'catalog:'
         version: 15.4.6(@babel/core@7.28.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -711,6 +714,9 @@ importers:
       '@spike/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/client:
     dependencies:
@@ -745,6 +751,9 @@ importers:
       '@spike/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/config:
     dependencies:
@@ -767,6 +776,9 @@ importers:
       '@spike/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/db:
     dependencies:
@@ -804,6 +816,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.4
         version: 0.31.4
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/env:
     dependencies:
@@ -872,6 +887,9 @@ importers:
       '@spike/typescript-config':
         specifier: workspace:*
         version: link:../../../tooling/typescript-config
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/next:
     dependencies:
@@ -903,6 +921,9 @@ importers:
       '@spike/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/platforms/lms:
     dependencies:
@@ -922,6 +943,9 @@ importers:
       '@spike/typescript-config':
         specifier: workspace:*
         version: link:../../../tooling/typescript-config
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/platforms/spikescout:
     dependencies:
@@ -953,6 +977,9 @@ importers:
       '@types/react':
         specifier: 19.1.1
         version: 19.1.1
+      eslint:
+        specifier: ^9.31.0
+        version: 9.33.0(jiti@2.5.1)
 
   packages/ui:
     dependencies:

@@ -27,7 +27,8 @@
     "@spike/typescript-config": "workspace:*",
     "@types/node": "^22.15.3",
     "@types/pg": "^8.15.4",
-    "drizzle-kit": "^0.31.4"
+    "drizzle-kit": "^0.31.4",
+    "eslint": "^9.31.0"
   },
   "typesVersions": {
     "*": {
