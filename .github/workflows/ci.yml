@@ -275,7 +275,7 @@ jobs:
         if: github.event_name == 'push'
         env:
           APP_NAME: ${{ matrix.app }}
-          WEBHOOK_URL: ${{ env[matrix.webhook_key] }}
+          WEBHOOK_URL: ${{ secrets[matrix.webhook_key] }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
@@ -363,7 +363,7 @@ jobs:
         if: github.event_name == 'push'
         env:
           APP_NAME: nitro-api
-          WEBHOOK_URL: ${{ env.WEBHOOK_URL_NITRO_API }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL_NITRO_API }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
