@@ -1,8 +1,22 @@
 name: PR CI
-
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches-ignore:
+      - production
+    paths-ignore: []
+
+jobs:
+  skip-if-staging-to-production:
+    if: github.event.pull_request.base.ref == 'production' && github.event.pull_request.head.ref == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skipping PR checks for staging -> production PR."
+    outputs:
+      skipped: true
+
+  lint:
+    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
 
 # Prevent duplicate runs on same PR head
 concurrency:
@@ -60,6 +74,7 @@ jobs:
         run: pnpm run lint
 
   prebuild:
+    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
     name: Prebuild monorepo applications
     runs-on: ubuntu-latest
     needs: lint
@@ -204,6 +219,7 @@ jobs:
           retention-days: 3
 
   build-next:
+    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
     name: Build Next.js images (prebuilt, no push)
     runs-on: ubuntu-latest
     needs: prebuild
@@ -257,6 +273,7 @@ jobs:
           docker image ls $IMAGE:$SHA_TAG
 
   build-nitro:
+    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
     name: Build nitro-api image (prebuilt, no push)
     runs-on: ubuntu-latest
     needs: prebuild
@@ -302,6 +319,7 @@ jobs:
           docker image ls $IMAGE:$SHA_TAG
 
   summary:
+    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
     name: Summary
     runs-on: ubuntu-latest
     needs: [build-next, build-nitro]
