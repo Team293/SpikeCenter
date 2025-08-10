@@ -381,7 +381,7 @@ jobs:
         env:
           APP_NAME: nitro-api
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL_NITRO_API }}
-          DEPLOY_TOKEN: ${{ vars.DEPLOY_TOKEN }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
