@@ -1,4 +1,4 @@
-name: CI
+name: Deploy
 
 on:
   push:
@@ -312,7 +312,7 @@ jobs:
     name: Build & push nitro-api image (prebuilt)
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
-    needs: [prebuild, db-migrate]
+    needs: [prebuild]
     timeout-minutes: 25
     steps:
       - name: Checkout
