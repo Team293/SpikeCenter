@@ -38,19 +38,14 @@ const auth = betterAuth({
   advanced: {
     cookiePrefix: 'spike',
     crossSubDomainCookies: {
-      enabled: false,
-      domain: '.deli.dev',
+      enabled: true,
+      domain: 'spike.center',
     },
   },
   trustedOrigins: [
-    'https://deli.dev',
+    'https://auth.staging.spike.center',
+    'https://auth.spike.center',
     'http://localhost:3001',
-    'https://app.deli.dev',
-    'https://market.deli.dev',
-    'https://api.deli.dev',
-    'https://docs.deli.dev',
-    'https://auth.deli.dev',
-    'http://localhost:3000',
   ],
   emailVerification: {
     sendOnSignUp: false,

@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
-# Cancel in-progress runs of the same workflow on the same PR ref
+# Prevent duplicate runs on same PR head
 concurrency:
   group: pr-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -15,13 +15,55 @@ permissions:
 
 env:
   NODE_VERSION: 18.x
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TELEMETRY_DISABLED: 1
+  # Hard-set staging-like context for builds
+  STAGING: true
+  ARTIFACT_SUFFIX: -pr
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+            run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (workspace)
+        run: pnpm run lint
+
+  prebuild:
+    name: Prebuild monorepo applications
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,51 +86,228 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: prebuild-pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            pnpm-store-${{ runner.os }}-
+            prebuild-pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint (workspace)
-        run: pnpm run lint
+      - name: Generate environment files
+        run: |
+          set -euo pipefail
+          for APP in auth landing learn scout nitro-api; do
+            mkdir -p "apps/$APP"
+            {
+              echo "BETTER_AUTH_URL=${BETTER_AUTH_URL}"
+              echo "DATABASE_URL=${DATABASE_URL}"
+              echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+              echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}"
+              echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
+              echo "GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}"
+              echo "GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}"
+            } > "apps/$APP/.env"
+            cp "apps/$APP/.env" "apps/$APP/.env.production"
+            echo "Created env files for $APP"
+          done
+        env:
+          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
 
-  build:
-    name: Build Docker Images (no push)
+      - name: Turbo prebuild all deployable apps
+        run: |
+          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/docs --filter=./apps/nitro-api
+
+      - name: List built artifacts
+        run: |
+          ls -1 apps/auth/.next || true
+          ls -1 apps/landing/.next || true
+          ls -1 apps/learn/.next || true
+          ls -1 apps/scout/.next || true
+          ls -1 apps/docs/.next || true
+          ls -1 apps/nitro-api/.output || true
+
+      - name: Package build artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p dist-artifacts
+          for APP in auth landing learn scout docs; do
+            if [ -d "apps/$APP/.next" ]; then
+              (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}${ARTIFACT_SUFFIX}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
+              echo "Packaged next-${APP}${ARTIFACT_SUFFIX}.tgz"
+            else
+              echo "Missing .next for $APP" >&2
+              exit 1
+            fi
+          done
+          if [ -d "apps/nitro-api/.output" ]; then
+            (cd apps/nitro-api && tar -czf "../../dist-artifacts/nitro-api${ARTIFACT_SUFFIX}.tgz" .output $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
+            echo "Packaged nitro-api${ARTIFACT_SUFFIX}.tgz"
+          else
+            echo "Missing .output for nitro-api" >&2
+            exit 1
+          fi
+          ls -lh dist-artifacts
+
+      - name: Upload artifact auth
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-auth${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-auth${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact landing
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-landing${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-landing${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact learn
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-learn${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-learn${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact scout
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-scout${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-scout${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-docs${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-docs${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact nitro
+        uses: actions/upload-artifact@v4
+        with:
+          name: nitro-api${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+  build-next:
+    name: Build Next.js images (prebuilt, no push)
     runs-on: ubuntu-latest
-    needs: lint
-    timeout-minutes: 45
+    needs: prebuild
+    timeout-minutes: 40
     strategy:
       matrix:
-        app: [auth, landing, learn, scout]
+        include:
+          - app: auth
+          - app: landing
+          - app: learn
+          - app: scout
+          - app: docs
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download prebuilt artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: next-${{ matrix.app }}${{ env.ARTIFACT_SUFFIX }}
+          path: artifact-download
+
+      - name: Extract prebuilt artifact
+        run: |
+          set -e
+          mkdir -p apps/${{ matrix.app }}
+          tar -xzf artifact-download/next-${{ matrix.app }}${{ env.ARTIFACT_SUFFIX }}.tgz -C apps/${{ matrix.app }}
+          test -d "apps/${{ matrix.app }}/.next" || (echo ".next not extracted" && ls -al apps/${{ matrix.app }} && exit 1)
+
+      - name: Verify prebuilt artifact
+        run: |
+          if [ ! -f "apps/${{ matrix.app }}/.next/BUILD_ID" ] && [ ! -d "apps/${{ matrix.app }}/.next/server" ]; then
+            echo "Prebuilt .next directory for ${{ matrix.app }} appears missing or incomplete."
+            ls -al apps/${{ matrix.app }}/.next || true
+            exit 1
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build image (ephemeral, not pushed)
+      - name: Build image from prebuilt artifacts (no push)
         run: |
           IMAGE=ghcr.io/team293/${{ matrix.app }}
-          TAG=pr-${{ github.sha }}
-          echo "Building $IMAGE:$TAG (APP=${{ matrix.app }})"
+            SHA_TAG=pr-${{ github.sha }}
+          echo "Building $IMAGE:$SHA_TAG (no push)"
           docker build \
             --build-arg APP=${{ matrix.app }} \
-            -t $IMAGE:$TAG \
-            -f Dockerfile .
-          docker image ls $IMAGE:$TAG
-
-      - name: Build nitro-api image (no push on PR)
-        run: |
-          IMAGE=ghcr.io/team293/nitro-api
-          SHA_TAG=sha-${{ github.sha }}
-          echo "Building $IMAGE:$SHA_TAG (nitro-api)"
-          docker build -f deploy/nitro/Dockerfile -t $IMAGE:$SHA_TAG .
+            --build-arg USE_PREBUILT=true \
+            -t $IMAGE:$SHA_TAG \
+            -f deploy/next/Dockerfile .
           docker image ls $IMAGE:$SHA_TAG
 
-      - name: Summary
-        if: always()
+  build-nitro:
+    name: Build nitro-api image (prebuilt, no push)
+    runs-on: ubuntu-latest
+    needs: prebuild
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download prebuilt nitro artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nitro-api${{ env.ARTIFACT_SUFFIX }}
+          path: artifact-download-nitro
+
+      - name: Extract nitro artifact
         run: |
-          echo "Built image for ${{ matrix.app }} (not pushed)"
+          set -e
+          mkdir -p apps/nitro-api
+          tar -xzf artifact-download-nitro/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz -C apps/nitro-api
+          test -d "apps/nitro-api/.output" || (echo ".output not extracted" && ls -al apps/nitro-api && exit 1)
+
+      - name: Verify nitro artifact
+        run: |
+          if [ ! -f "apps/nitro-api/.output/server/index.mjs" ]; then
+            echo "Nitro .output missing expected server entry."
+            find apps/nitro-api/.output -maxdepth 3 -type f | head -n 50
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build nitro image from prebuilt artifacts (no push)
+        run: |
+          IMAGE=ghcr.io/team293/nitro-api
+          SHA_TAG=pr-${{ github.sha }}
+          echo "Building $IMAGE:$SHA_TAG (no push)"
+          docker build \
+            --build-arg APP=nitro-api \
+            --build-arg USE_PREBUILT=true \
+            -t $IMAGE:$SHA_TAG \
+            -f deploy/nitro/Dockerfile .
+          docker image ls $IMAGE:$SHA_TAG
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [build-next, build-nitro]
+    if: always()
+    steps:
+      - name: Report
+        run: |
+          echo "PR build completed for commit ${{ github.sha }}"
+          echo "Artifacts built with suffix: ${ARTIFACT_SUFFIX}"

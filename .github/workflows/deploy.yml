@@ -1,4 +1,4 @@
-name: CI
+name: Deploy
 
 on:
   push:
@@ -20,6 +20,8 @@ env:
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TELEMETRY_DISABLED: 1
+  STAGING: ${{ github.ref == 'refs/heads/staging' && 'true' || 'false' }}
+  ARTIFACT_SUFFIX: ${{ github.ref == 'refs/heads/staging' && '-staging' || '' }}
 
 jobs:
   lint:
@@ -63,6 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     timeout-minutes: 30
+    environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -121,7 +124,7 @@ jobs:
 
       - name: Turbo prebuild all deployable apps
         run: |
-          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/nitro-api
+          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/docs --filter=./apps/nitro-api
 
       - name: List built artifacts
         run: |
@@ -129,24 +132,25 @@ jobs:
           ls -1 apps/landing/.next || true
           ls -1 apps/learn/.next || true
           ls -1 apps/scout/.next || true
+          ls -1 apps/docs/.next || true
           ls -1 apps/nitro-api/.output || true
 
       - name: Package build artifacts
         run: |
           set -euo pipefail
             mkdir -p dist-artifacts
-          for APP in auth landing learn scout; do
+          for APP in auth landing learn scout docs; do
             if [ -d "apps/$APP/.next" ]; then
-              (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
-              echo "Packaged next-${APP}.tgz"
+              (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}${ARTIFACT_SUFFIX}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
+              echo "Packaged next-${APP}${ARTIFACT_SUFFIX}.tgz"
             else
               echo "Missing .next for $APP" >&2
               exit 1
             fi
           done
           if [ -d "apps/nitro-api/.output" ]; then
-            (cd apps/nitro-api && tar -czf "../../dist-artifacts/nitro-api.tgz" .output $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
-            echo "Packaged nitro-api.tgz"
+            (cd apps/nitro-api && tar -czf "../../dist-artifacts/nitro-api${ARTIFACT_SUFFIX}.tgz" .output $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
+            echo "Packaged nitro-api${ARTIFACT_SUFFIX}.tgz"
           else
             echo "Missing .output for nitro-api" >&2
             exit 1
@@ -156,48 +160,56 @@ jobs:
       - name: Upload artifact auth
         uses: actions/upload-artifact@v4
         with:
-          name: next-auth
-          path: dist-artifacts/next-auth.tgz
+          name: next-auth${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-auth${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
 
       - name: Upload artifact landing
         uses: actions/upload-artifact@v4
         with:
-          name: next-landing
-          path: dist-artifacts/next-landing.tgz
+          name: next-landing${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-landing${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
 
       - name: Upload artifact learn
         uses: actions/upload-artifact@v4
         with:
-          name: next-learn
-          path: dist-artifacts/next-learn.tgz
+          name: next-learn${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-learn${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
 
       - name: Upload artifact scout
         uses: actions/upload-artifact@v4
         with:
-          name: next-scout
-          path: dist-artifacts/next-scout.tgz
+          name: next-scout${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-scout${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-docs${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-docs${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
 
       - name: Upload artifact nitro
         uses: actions/upload-artifact@v4
         with:
-          name: nitro-api
-          path: dist-artifacts/nitro-api.tgz
+          name: nitro-api${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
-
+          
   build-next:
     name: Build & push Next.js images (prebuilt)
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
-    needs: prebuild
+    needs: [prebuild]
     timeout-minutes: 40
     strategy:
       matrix:
@@ -210,6 +222,9 @@ jobs:
             webhook_key: WEBHOOK_URL_LEARN
           - app: scout
             webhook_key: WEBHOOK_URL_SCOUT
+          - app: docs
+            webhook_key: WEBHOOK_URL_DOCS
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -217,14 +232,14 @@ jobs:
       - name: Download prebuilt artifact
         uses: actions/download-artifact@v4
         with:
-          name: next-${{ matrix.app }}
+          name: next-${{ matrix.app }}${{ env.ARTIFACT_SUFFIX }}
           path: artifact-download
 
       - name: Extract prebuilt artifact
         run: |
           set -e
           mkdir -p apps/${{ matrix.app }}
-          tar -xzf artifact-download/next-${{ matrix.app }}.tgz -C apps/${{ matrix.app }}
+          tar -xzf artifact-download/next-${{ matrix.app }}${{ env.ARTIFACT_SUFFIX }}.tgz -C apps/${{ matrix.app }}
           test -d "apps/${{ matrix.app }}/.next" || (echo ".next not extracted" && ls -al apps/${{ matrix.app }} && exit 1)
 
       - name: Verify prebuilt artifact
@@ -277,16 +292,12 @@ jobs:
         env:
           APP_NAME: ${{ matrix.app }}
           WEBHOOK_URL: ${{ secrets[matrix.webhook_key] }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
-              -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/team293/${{ matrix.app }}:sha-${{ github.sha }}" \
-                               --arg ref "${{ github.ref }}" \
-                               --arg commit "${{ github.sha }}" \
-                               --arg app "${{ matrix.app }}" \
-                               '{app:$app,image:$image,ref:$ref,commit:$commit,timestamp:env.GITHUB_RUN_ID}')"
+              -H "Authorization: Bearer ${DEPLOY_TOKEN}"
             echo "Webhook ping complete."
           else
             UPPER_APP=$(echo "$APP_NAME" | tr '[:lower:]' '[:upper:]')
@@ -297,7 +308,7 @@ jobs:
     name: Build & push nitro-api image (prebuilt)
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
-    needs: prebuild
+    needs: [prebuild]
     timeout-minutes: 25
     steps:
       - name: Checkout
@@ -306,14 +317,14 @@ jobs:
       - name: Download prebuilt nitro artifact
         uses: actions/download-artifact@v4
         with:
-          name: nitro-api
+          name: nitro-api${{ env.ARTIFACT_SUFFIX }}
           path: artifact-download-nitro
 
       - name: Extract nitro artifact
         run: |
           set -e
           mkdir -p apps/nitro-api
-          tar -xzf artifact-download-nitro/nitro-api.tgz -C apps/nitro-api
+          tar -xzf artifact-download-nitro/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz -C apps/nitro-api
           test -d "apps/nitro-api/.output" || (echo ".output not extracted" && ls -al apps/nitro-api && exit 1)
 
       - name: Verify nitro artifact
@@ -361,21 +372,17 @@ jobs:
             docker push $IMAGE:staging
           fi
 
-      - name: Ping webhook (if configured)
+      - name: Ping webhook
         if: github.event_name == 'push'
         env:
           APP_NAME: nitro-api
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL_NITRO_API }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
-              -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/team293/nitro-api:sha-${{ github.sha }}" \
-                               --arg ref "${{ github.ref }}" \
-                               --arg commit "${{ github.sha }}" \
-                               --arg app "${APP_NAME}" \
-                               '{app:$app,image:$image,ref:$ref,commit:$commit,timestamp:env.GITHUB_RUN_ID}')"
+              -H "Authorization: Bearer ${DEPLOY_TOKEN}"
             echo "Webhook ping complete."
           else
             echo "No webhook URL set (expected env WEBHOOK_URL_NITRO_API); skipping."

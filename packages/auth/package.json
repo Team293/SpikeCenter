@@ -22,7 +22,8 @@
     "@spike/eslint-config": "workspace:*",
     "@spike/prettier-config": "workspace:*",
     "@spike/tailwind-config": "workspace:*",
-    "@spike/typescript-config": "workspace:*"
+    "@spike/typescript-config": "workspace:*",
+    "eslint": "^9.31.0"
   },
   "typesVersions": {
     "*": {

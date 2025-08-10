@@ -45,7 +45,7 @@ RUN find packages -mindepth 2 -maxdepth 2 ! -name package.json -exec rm -rf {} +
 
 # Install all dependencies (including dev) for the whole graph
 # (We need dev deps for building TypeScript, etc.)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 ###############################################################################
 # Stage 2: build the selected app with Turbo (and its dependency graph)
@@ -58,6 +58,11 @@ ARG USE_PREBUILT
 COPY . .
 # Remove all other apps so their lifecycle scripts (e.g. prepare) cannot run during prune
 RUN find apps -mindepth 1 -maxdepth 1 ! -name "${APP}" -exec rm -rf {} +
+# Run previously skipped lifecycle scripts (postinstall) for the target app now that source is present.
+# Rebuild any native modules (noop if none), then run postinstall only if it exists.
+RUN pnpm rebuild --filter=./apps/${APP} || true \
+    && if grep -q '"postinstall"' apps/${APP}/package.json; then pnpm --filter=./apps/${APP} run postinstall || true; else echo "No postinstall script for ${APP}"; fi
+
 
 
 # (Optional) You can enable Turbo remote caching here by providing env vars/secrets.
@@ -86,7 +91,7 @@ COPY packages ./packages
 # Copy target app manifest
 COPY apps/${APP}/package.json ./apps/${APP}/package.json
 # Install only production dependencies for the selected app and its graph
-RUN pnpm install --prod --frozen-lockfile --filter ./apps/${APP}
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts --filter ./apps/${APP}
 
 ###############################################################################
 # Stage 4: production runtime image
@@ -128,8 +133,5 @@ COPY --from=prod-deps /repo/packages ./packages
 WORKDIR /app/apps/${APP}
 
 EXPOSE 3000
-
-# A simple healthcheck hitting Next.js default path
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:${PORT}/api/health || exit 1
 
 CMD ["pnpm", "start"]
