@@ -73,7 +73,7 @@ export function Hero() {
             }}
             whileTap={{ scale: 0.95 }}
           >
-            Explore Our Work <ArrowRight size={20} />
+            View The Suite <ArrowRight size={20} />
           </motion.button>
         </TransitionLink>
       </div>

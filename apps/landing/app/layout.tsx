@@ -11,9 +11,9 @@ import { TRPCProvider } from "@spike/client/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Innovate. Create. Inspire.",
-  description: "Awwwards-inspired site using Next.js, GSAP, and Three.js",
-  generator: "v0.dev",
+  title: "Spike Center",
+  description:
+    "Crafting next-gen open-source solutions to accelerate FRC performance.",
 };
 
 export default function RootLayout({
