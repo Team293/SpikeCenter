@@ -430,16 +430,18 @@ jobs:
             docker push $IMAGE:staging
           fi
 
-      - name: Ping webhook (if configured)
+      - name: Ping webhook
         if: github.event_name == 'push'
         env:
           APP_NAME: nitro-api
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL_NITRO_API }}
+          DEPLOY_TOKEN: ${{ vars.DEPLOY_TOKEN }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
               -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${DEPLOY_TOKEN}" \
               -d "$(jq -n --arg image "ghcr.io/team293/nitro-api:sha-${{ github.sha }}" \
                                --arg ref "${{ github.ref }}" \
                                --arg commit "${{ github.sha }}" \
