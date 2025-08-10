@@ -386,13 +386,7 @@ jobs:
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${DEPLOY_TOKEN}" \
-              -d "$(jq -n --arg image "ghcr.io/team293/nitro-api:sha-${{ github.sha }}" \
-                               --arg ref "${{ github.ref }}" \
-                               --arg commit "${{ github.sha }}" \
-                               --arg app "${APP_NAME}" \
-                               '{app:$app,image:$image,ref:$ref,commit:$commit,timestamp:env.GITHUB_RUN_ID}')"
+              -H "Authorization: Bearer ${DEPLOY_TOKEN}"
             echo "Webhook ping complete."
           else
             echo "No webhook URL set (expected env WEBHOOK_URL_NITRO_API); skipping."
