@@ -31,7 +31,7 @@ We use **GitHub Issues** to track:
 All PRs must:
 1. Be linked to at least one issue (`Closes #<issue_number>` in the description).
 2. Pass linting locally.
-4. Update **documentation** if behavior changes.
+3. Update **documentation** if behavior changes.
 5. Follow the [PR Template](.github/PULL_REQUEST_TEMPLATE.md).
 
 **Branch naming convention:**
