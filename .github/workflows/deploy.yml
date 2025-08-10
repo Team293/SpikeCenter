@@ -292,16 +292,12 @@ jobs:
         env:
           APP_NAME: ${{ matrix.app }}
           WEBHOOK_URL: ${{ secrets[matrix.webhook_key] }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
           if [ -n "${WEBHOOK_URL}" ]; then
             echo "Pinging webhook for ${APP_NAME} -> ${WEBHOOK_URL}"
             curl -fsSL -X POST "${WEBHOOK_URL}" \
-              -H "Content-Type: application/json" \
-              -d "$(jq -n --arg image "ghcr.io/team293/${{ matrix.app }}:sha-${{ github.sha }}" \
-                               --arg ref "${{ github.ref }}" \
-                               --arg commit "${{ github.sha }}" \
-                               --arg app "${{ matrix.app }}" \
-                               '{app:$app,image:$image,ref:$ref,commit:$commit,timestamp:env.GITHUB_RUN_ID}')"
+              -H "Authorization: Bearer ${DEPLOY_TOKEN}"
             echo "Webhook ping complete."
           else
             UPPER_APP=$(echo "$APP_NAME" | tr '[:lower:]' '[:upper:]')
