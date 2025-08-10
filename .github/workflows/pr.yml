@@ -17,7 +17,6 @@ jobs:
 
   lint:
     if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
-    types: [opened, synchronize, reopened, ready_for_review]
 
 # Prevent duplicate runs on same PR head
 concurrency:
