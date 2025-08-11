@@ -161,7 +161,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist-artifacts
-          for APP in auth landing learn scout docs; do
+          for APP in auth landing learn scout docs attendance; do
             if [ -d "apps/$APP/.next" ]; then
               (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}${ARTIFACT_SUFFIX}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
               echo "Packaged next-${APP}${ARTIFACT_SUFFIX}.tgz"
