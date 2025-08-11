@@ -15,7 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@spike/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 interface DataTableColumnHeaderProps<TData, TValue>
