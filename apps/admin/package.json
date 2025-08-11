@@ -1,0 +1,57 @@
+{
+  "name": "admin",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3005",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@spike/api": "workspace:*",
+    "@spike/auth": "workspace:*",
+    "@spike/client": "workspace:*",
+    "@spike/config": "workspace:*",
+    "@spike/db": "workspace:*",
+    "@spike/env": "workspace:*",
+    "@spike/next": "workspace:*",
+    "@spike/ui": "workspace:*",
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "next-themes": "0.4.4",
+    "normalize-url": "^8.0.2",
+    "nuqs": "^2.4.3",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "sonner": "^1.7.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@spike/eslint-config": "workspace:*",
+    "@spike/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.15.3",
+    "@types/react": "19.1.1",
+    "@types/react-dom": "19.1.1",
+    "eslint": "^9.31.0",
+    "postcss": "8.5.1",
+    "tailwindcss": "catalog:",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "catalog:"
+  },
+  "eslintConfig": {
+    "root": true,
+    "extends": [
+      "@spike/eslint-config/base",
+      "@spike/eslint-config/nextjs",
+      "@spike/eslint-config/react",
+      "@spike/eslint-config/apps"
+    ]
+  },
+  "prettier": "@spike/prettier-config"
+}
