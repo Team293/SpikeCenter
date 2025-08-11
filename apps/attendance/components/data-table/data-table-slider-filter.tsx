@@ -3,17 +3,13 @@
 import type { Column } from "@tanstack/react-table";
 import { PlusCircle, XCircle } from "lucide-react";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { cn } from "@/lib/utils";
+import { Button } from "@spike/ui/button";
+import { Label } from "@spike/ui/label";
+import { Input } from "@spike/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@spike/ui/popover";
+import { Separator } from "@spike/ui/separator";
+import { Slider } from "@spike/ui/slider";
+import { cn } from "@spike/ui/utils";
 
 interface Range {
   min: number;

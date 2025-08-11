@@ -29,7 +29,7 @@ export function UserInfoCard({ email, hoursInShop }: UserInfoCardProps) {
           <div>
             <p className="text-sm text-gray-500">Total Hours in Shop</p>
             <p className="font-medium text-gray-900">
-              {hoursInShop.toFixed(1)} hours
+              {hoursInShop.toFixed(0)} hours
             </p>
           </div>
         </div>

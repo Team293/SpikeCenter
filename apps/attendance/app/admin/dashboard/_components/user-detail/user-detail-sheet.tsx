@@ -197,7 +197,7 @@ function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetProps) {
                 <Button
                   onClick={handleAddNewRecord}
                   size="sm"
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 px-2"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Record

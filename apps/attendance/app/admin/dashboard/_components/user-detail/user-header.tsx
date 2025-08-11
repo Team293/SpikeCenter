@@ -66,8 +66,8 @@ export function UserHeader({
     <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Avatar className="h-16 w-16 border-2 border-white shadow-lg">
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-semibold">
+          <Avatar className="h-16 w-16 border-2 border-white shadow-lg rounded-full overflow-hidden flex items-center justify-center">
+            <AvatarFallback className="w-full h-full flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-semibold">
               {getInitials(userName)}
             </AvatarFallback>
           </Avatar>
@@ -107,6 +107,7 @@ export function UserHeader({
               onClick={onToggleEditMode}
               variant={isEditMode ? "destructive" : "outline"}
               size="sm"
+              className="mx-2 px-2"
             >
               {isEditMode ? (
                 <>

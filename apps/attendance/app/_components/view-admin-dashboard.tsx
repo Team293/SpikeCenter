@@ -16,10 +16,13 @@ export function ViewAdminDashboard({ hasAccess }: { hasAccess: boolean }) {
   return (
     <div>
       <Card>
-        <CardContent className="flex flex-col space-y-4">
-          <Button onClick={redirectToAdminDashboard}>
-            <Shield />
-            View Admin Dashboard
+        <CardContent className="flex flex-col">
+          <Button
+            onClick={redirectToAdminDashboard}
+            className="inline-flex items-center"
+          >
+            <Shield className="mr-2" />
+            <span>Go to Admin Dashboard</span>
           </Button>
         </CardContent>
       </Card>

@@ -269,7 +269,7 @@ export function EditableAttendanceRecord({
               onClick={handleSave}
               size="sm"
               disabled={isLoading}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 px-2"
             >
               <Save className="h-3 w-3 mr-1" />
               Save
@@ -278,6 +278,7 @@ export function EditableAttendanceRecord({
               onClick={handleCancel}
               variant="outline"
               size="sm"
+              className="px-2"
               disabled={isLoading}
             >
               <X className="h-3 w-3 mr-1" />

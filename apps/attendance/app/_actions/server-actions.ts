@@ -2,50 +2,48 @@
 
 import { auth } from "@spike/auth";
 import { attendance, db } from "@spike/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function logAction(action: string, userId: string) {
   const today = new Date().toISOString().split("T")[0];
 
-  // Check if there's already an attendance record for today
-  const existingRecord = await db
-    .select()
-    .from(attendance)
-    .where(and(eq(attendance.userId, userId), eq(attendance.date, today)))
-    .limit(1);
-
-  if (existingRecord.length > 0) {
-    // Update existing record
-    const updateData: any = {
-      updatedAt: new Date(),
-    };
-
-    if (action === "check-in") {
-      updateData.checkInTime = new Date();
-    } else if (action === "check-out") {
-      updateData.checkOutTime = new Date();
-    }
-
-    await db
-      .update(attendance)
-      .set(updateData)
-      .where(eq(attendance.id, existingRecord[0].id));
-  } else {
-    // Create new record
-    const recordData: any = {
-      userId: userId,
+  if (action === "check-in") {
+    // Always create a new record on check-in
+    await db.insert(attendance).values({
+      userId,
       date: today,
       status: "present",
-    };
+      checkInTime: new Date(),
+    } as any);
+    return;
+  }
 
-    if (action === "check-in") {
-      recordData.checkInTime = new Date();
-    } else if (action === "check-out") {
-      recordData.checkOutTime = new Date();
+  if (action === "check-out") {
+    // Find the latest (open) record for today without a check-out time
+    const openRecord = await db
+      .select()
+      .from(attendance)
+      .where(
+        and(
+          eq(attendance.userId, userId),
+          eq(attendance.date, today),
+          isNull(attendance.checkOutTime),
+        ),
+      )
+      .limit(1);
+
+    if (openRecord.length > 0) {
+      await db
+        .update(attendance)
+        .set({
+          checkOutTime: new Date(),
+          updatedAt: new Date(),
+        } as any)
+        .where(eq(attendance.id, openRecord[0].id));
     }
 
-    await db.insert(attendance).values(recordData);
+    return;
   }
 }
 
@@ -54,43 +52,47 @@ export async function getStatus(
 ): Promise<"checked-in" | "checked-out"> {
   const today = new Date().toISOString().split("T")[0];
 
-  // Get today's attendance record
-  const todayRecord = await db
+  // Any open (no checkOutTime) record today means user is currently checked in
+  const openRecord = await db
     .select()
     .from(attendance)
-    .where(and(eq(attendance.userId, userId), eq(attendance.date, today)))
+    .where(
+      and(
+        eq(attendance.userId, userId),
+        eq(attendance.date, today),
+        isNull(attendance.checkOutTime),
+      ),
+    )
     .limit(1);
 
-  if (todayRecord.length === 0) {
-    return "checked-out";
-  }
-
-  const record = todayRecord[0];
-
-  // If user has checked in but not checked out, they're checked in
-  if (record.checkInTime && !record.checkOutTime) {
+  if (openRecord.length > 0) {
     return "checked-in";
   }
 
-  // Otherwise they're checked out
   return "checked-out";
 }
 
 export async function getCheckedInTime(userId: string): Promise<Date | null> {
   const today = new Date().toISOString().split("T")[0];
 
-  // Get today's attendance record
-  const todayRecord = await db
+  // Get the current open session (no checkOutTime) for today
+  const openRecord = await db
     .select()
     .from(attendance)
-    .where(and(eq(attendance.userId, userId), eq(attendance.date, today)))
+    .where(
+      and(
+        eq(attendance.userId, userId),
+        eq(attendance.date, today),
+        isNull(attendance.checkOutTime),
+      ),
+    )
     .limit(1);
 
-  if (todayRecord.length === 0 || !todayRecord[0].checkInTime) {
+  if (openRecord.length === 0 || !openRecord[0].checkInTime) {
     return null;
   }
 
-  return todayRecord[0].checkInTime;
+  return openRecord[0].checkInTime;
 }
 
 export async function signOut() {
