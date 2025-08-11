@@ -9,6 +9,7 @@ export default defineConfig({
     './src/db/platforms/lms.ts',
     './src/db/platforms/scout.ts',
     './src/db/platforms/landing.ts',
+    './src/db/platforms/attendance.ts',
   ],
   dialect: 'postgresql',
   dbCredentials: {

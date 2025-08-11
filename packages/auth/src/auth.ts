@@ -7,6 +7,7 @@ import { nextCookies } from 'better-auth/next-js';
 import { admin, bearer, magicLink, organization } from 'better-auth/plugins';
 
 import { baseAvatarPlugin } from './plugins/base-avatar-plugin';
+import sharedEnv from '@spike/env/env.shared';
 
 const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -52,6 +53,12 @@ const auth = betterAuth({
     'https://auth.staging.spike.center',
     'https://auth.spike.center',
     'http://localhost:3001',
+    sharedEnv.ATTENDANCE_BASE_URL,
+    sharedEnv.AUTH_BASE_URL,
+    sharedEnv.LANDING_BASE_URL,
+    sharedEnv.DOCS_BASE_URL,
+    sharedEnv.LEARN_BASE_URL,
+    sharedEnv.SCOUT_BASE_URL
   ],
   emailVerification: {
     sendOnSignUp: false,
