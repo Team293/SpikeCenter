@@ -1,4 +1,4 @@
-import {attendance, db, shop_days, user} from "@/index";
+import {attendance, db, shop_days, user} from "@spike/db";
 import { and, eq, isNull, isNotNull } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 
