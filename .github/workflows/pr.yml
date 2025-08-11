@@ -6,23 +6,6 @@ on:
       - production
     paths-ignore: []
 
-jobs:
-  skip-if-staging-to-production:
-    if: github.event.pull_request.base.ref == 'production' && github.event.pull_request.head.ref == 'staging'
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Skipping PR checks for staging -> production PR."
-    outputs:
-      skipped: true
-
-  lint:
-    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
-
-# Prevent duplicate runs on same PR head
-concurrency:
-  group: pr-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
   packages: read
@@ -36,8 +19,21 @@ env:
   STAGING: true
   ARTIFACT_SUFFIX: -pr
 
+concurrency:
+  group: pr-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  skip-if-staging-to-production:
+    if: github.event.pull_request.base.ref == 'production' && github.event.pull_request.head.ref == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skipping PR checks for staging -> production PR."
+    outputs:
+      skipped: true
+
   lint:
+    if: github.event.pull_request.base.ref != 'production' || github.event.pull_request.head.ref != 'staging'
     name: Lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -53,7 +49,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-            run_install: false
+          run_install: false
 
       - name: Get pnpm store directory
         id: pnpm-store
@@ -263,7 +259,7 @@ jobs:
       - name: Build image from prebuilt artifacts (no push)
         run: |
           IMAGE=ghcr.io/team293/${{ matrix.app }}
-            SHA_TAG=pr-${{ github.sha }}
+          SHA_TAG=pr-${{ github.sha }}
           echo "Building $IMAGE:$SHA_TAG (no push)"
           docker build \
             --build-arg APP=${{ matrix.app }} \
@@ -323,7 +319,6 @@ jobs:
     name: Summary
     runs-on: ubuntu-latest
     needs: [build-next, build-nitro]
-    if: always()
     steps:
       - name: Report
         run: |
