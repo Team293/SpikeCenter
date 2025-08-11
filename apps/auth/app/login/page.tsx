@@ -11,8 +11,10 @@ export default async function Page() {
     headers: await headers(),
   });
 
+  console.log(session);
+
   if (session) {
-    redirect(asUrl('auth', 'account'));
+    redirect(asUrl('landing', 'root'));
   }
 
   return (

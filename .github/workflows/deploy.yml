@@ -101,26 +101,34 @@ jobs:
           for APP in auth landing learn scout nitro-api; do
             mkdir -p "apps/$APP"
             {
-              echo "BETTER_AUTH_URL=${BETTER_AUTH_URL}"
-              echo "DATABASE_URL=${DATABASE_URL}"
-              echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
-              echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "NODE_ENV=${NODE_ENV}"
               echo "BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}"
-              echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
+              echo "DATABASE_URL=${DATABASE_URL}"
               echo "GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}"
               echo "GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}"
+              echo "NEXT_PUBLIC_AUTH_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+              echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+              echo "NEXT_PUBLIC_DOCS_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "NEXT_PUBLIC_LANDING_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "NEXT_PUBLIC_LEARN_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "NEXT_PUBLIC_SCOUT_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
             } > "apps/$APP/.env"
             cp "apps/$APP/.env" "apps/$APP/.env.production"
             echo "Created env files for $APP"
           done
         env:
-          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
-          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+          NODE_ENV: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
           GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
+          NEXT_PUBLIC_AUTH_BASE_URL: ${{ secrets.NEXT_PUBLIC_AUTH_BASE_URL }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_DOCS_BASE_URL: ${{ secrets.NEXT_PUBLIC_DOCS_BASE_URL }}
+          NEXT_PUBLIC_LANDING_BASE_URL: ${{ secrets.NEXT_PUBLIC_LANDING_BASE_URL }}
+          NEXT_PUBLIC_LEARN_BASE_URL: ${{ secrets.NEXT_PUBLIC_LEARN_BASE_URL }}
+          NEXT_PUBLIC_SCOUT_BASE_URL: ${{ secrets.NEXT_PUBLIC_SCOUT_BASE_URL }}
 
       - name: Turbo prebuild all deployable apps
         run: |
@@ -204,7 +212,7 @@ jobs:
           path: dist-artifacts/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
-          
+
   build-next:
     name: Build & push Next.js images (prebuilt)
     runs-on: ubuntu-latest

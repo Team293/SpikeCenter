@@ -59,10 +59,4 @@ pnpm dev
 ```
 
 ## Contributing
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug
-3. Make your changes and commit them with clear messages.
-4. Push your changes to your fork.
-5. Create a pull request against the `staging` branch of the original repository.
+Please read our [contributing guidelines](CONTRIBUTING.md) before submitting a pull request.
