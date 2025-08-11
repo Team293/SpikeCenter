@@ -11,7 +11,8 @@ const envDir = dirname(envFilePath);
 
 delete process.env.DATABASE_URL; // cause this was found in my launchctl environment and it was causing issues with migrating
 
-dotenvFlow.config({ path: envDir });
+// Enable debug mode for dotenv-flow in development to help troubleshoot environment variable loading issues.
+dotenvFlow.config({ path: envDir, debug: process.env.NODE_ENV === 'development' });
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production']).default('development'),
