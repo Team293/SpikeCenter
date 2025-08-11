@@ -93,8 +93,7 @@ export function UserTable({ users }: { users: TableUser[] }) {
       sorting: [{ id: "hours", desc: true }],
       columnPinning: { right: ["actions"] },
     },
-    // @ts-expect-error - getRowId is not defined in the type
-    getRowId: (row) => row.id,
+    getRowId: (row: TableUser) => row.id,
   });
 
   return (
