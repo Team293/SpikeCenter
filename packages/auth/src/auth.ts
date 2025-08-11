@@ -37,10 +37,16 @@ const auth = betterAuth({
   ],
   advanced: {
     cookiePrefix: 'spike',
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: 'spike.center',
-    },
+    useSecureCookies: serverEnv.NODE_ENV === 'production',
+    crossSubDomainCookies:
+      serverEnv.NODE_ENV === 'production'
+        ? {
+            enabled: true,
+            domain: '.spike.center',
+          }
+        : {
+            enabled: false,
+          },
   },
   trustedOrigins: [
     'https://auth.staging.spike.center',
@@ -53,9 +59,6 @@ const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
-    cookieCache: {
-      enabled: false,
-    },
   },
   user: {
     deleteUser: {

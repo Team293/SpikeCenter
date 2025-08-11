@@ -1,15 +1,22 @@
 import z from 'zod';
 
+
 const sharedEnvSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production']),
+  AUTH_BASE_URL: z.string(),
   API_BASE_URL: z.string(),
-  BASE_URL: z.string(),
+  DOCS_BASE_URL: z.string(),
+  LANDING_BASE_URL: z.string(),
+  LEARN_BASE_URL: z.string(),
+  SCOUT_BASE_URL: z.string(),
 });
 
 const sharedEnv = sharedEnvSchema.parse({
-  NODE_ENV: process.env.NODE_ENV,
+  AUTH_BASE_URL: process.env.NEXT_PUBLIC_AUTH_BASE_URL,
   API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+  DOCS_BASE_URL: process.env.NEXT_PUBLIC_DOCS_BASE_URL,
+  LANDING_BASE_URL: process.env.NEXT_PUBLIC_LANDING_BASE_URL,
+  LEARN_BASE_URL: process.env.NEXT_PUBLIC_LEARN_BASE_URL,
+  SCOUT_BASE_URL: process.env.NEXT_PUBLIC_SCOUT_BASE_URL,
 } satisfies Record<keyof z.infer<typeof sharedEnvSchema>, unknown>);
 
 export default sharedEnv;

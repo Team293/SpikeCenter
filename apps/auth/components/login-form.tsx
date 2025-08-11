@@ -1,6 +1,7 @@
 'use client';
 
 import { authClient } from '@spike/auth/client';
+import { asUrl } from '@spike/config/paths.config';
 import { Button } from '@spike/ui/button';
 import { Input } from '@spike/ui/input';
 import { cn } from '@spike/ui/utils';
@@ -13,21 +14,17 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
-  const [redirectUrl, setRedirectUrl] = useQueryState('/');
-
-  const getRedirectUrl = () => {
-    return 'http://localhost:3001' + (redirectUrl || '/');
-  };
+  const [redirectUrl] = useQueryState('redirectUrl', { defaultValue: '/' });
 
   const onMagicLinkSubmit = async (email: string) => {
     const loginService = getLoginService();
-    await loginService.loginWithMagicLink(email, getRedirectUrl());
+    await loginService.loginWithMagicLink(email, redirectUrl);
   };
 
   const onGithubLogin = async () => {
     await authClient.signIn.social({
       provider: 'github',
-      callbackURL: getRedirectUrl(),
+      callbackURL: redirectUrl,
     });
   };
 
@@ -81,7 +78,7 @@ export function LoginForm({
         </div>
       </form>
 
-      <div className="text-muted-foreground *:[a]:hover:text-primary *:[a]:underline *:[a]:underline-offset-4 text-balance text-center text-xs">
+      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
         and <a href="#">Privacy Policy</a>.
       </div>

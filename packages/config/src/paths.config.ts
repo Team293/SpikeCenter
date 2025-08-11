@@ -6,19 +6,6 @@ const PathSchema = z.object({
   replacements: z.array(z.string()).optional(),
 });
 
-const DashboardPathsSchema = z.object({
-  overview: PathSchema,
-  plugins: PathSchema,
-  macros: PathSchema,
-  members: PathSchema,
-  settings: PathSchema,
-  projectOverview: PathSchema,
-  projectInstallFlow: PathSchema,
-  projectLogs: PathSchema,
-  projectAnalytics: PathSchema,
-  projectSettings: PathSchema,
-});
-
 const AuthPathsSchema = z.object({
   login: PathSchema,
   account: PathSchema,
@@ -30,55 +17,25 @@ const LandingPathsSchema = z.object({
 
 const AppPathSchema = <T extends z.ZodRawShape>(pathsSchema: z.ZodObject<T>) =>
   z.object({
-    subdomain: z.string().optional(),
+    appUrl: z.string(),
     paths: pathsSchema,
   });
 
 const PathsSchema = z.object({
-  dashboard: AppPathSchema(DashboardPathsSchema),
   auth: AppPathSchema(AuthPathsSchema),
   landing: AppPathSchema(LandingPathsSchema),
 });
 
 const pathsConfigData = {
-  dashboard: {
-    subdomain: 'dashboard',
-    paths: {
-      overview: { href: '/overview' },
-      plugins: { href: '/plugins' },
-      macros: { href: '/macros' },
-      members: { href: '/members' },
-      settings: { href: '/settings' },
-      projectOverview: {
-        href: '/projects/[project]',
-        replacements: ['project'],
-      },
-      projectInstallFlow: {
-        href: '/projects/[project]/install',
-        replacements: ['project'],
-      },
-      projectLogs: {
-        href: '/projects/[project]/logs',
-        replacements: ['project'],
-      },
-      projectAnalytics: {
-        href: '/projects/[project]/analytics',
-        replacements: ['project'],
-      },
-      projectSettings: {
-        href: '/projects/[project]/settings',
-        replacements: ['project'],
-      },
-    },
-  },
   auth: {
-    subdomain: 'auth',
+    appUrl: sharedEnv.AUTH_BASE_URL,
     paths: {
       login: { href: '/login' },
       account: { href: '/account' },
     },
   },
   landing: {
+    appUrl: sharedEnv.LANDING_BASE_URL,
     paths: {
       root: { href: '/' },
     },
@@ -88,7 +45,6 @@ const pathsConfigData = {
 export const pathsConfig = PathsSchema.parse(pathsConfigData);
 
 type PathKeys = {
-  dashboard: keyof typeof pathsConfigData.dashboard.paths;
   auth: keyof typeof pathsConfigData.auth.paths;
   landing: keyof typeof pathsConfigData.landing.paths;
 };
@@ -134,15 +90,19 @@ export function asUrl<TApp extends keyof typeof pathsConfigData>(
   replacements?: Record<string, string>,
 ): string {
   const app = pathsConfigData[appKey];
-  const subdomain = 'subdomain' in app ? app.subdomain : undefined;
-  const basePath = subdomain
-    ? `https://${subdomain}.${sharedEnv.BASE_URL}`
-    : `https://${sharedEnv.BASE_URL}`;
+  const appUrl = 'appUrl' in app ? app.appUrl : undefined;
+
+  if (!appUrl) {
+    throw new Error(
+      `App URL is not defined for app: ${appKey}. Please check your paths configuration.`,
+    );
+  }
 
   const pathValue = app.paths[pathKey as keyof typeof app.paths] as {
     href: string;
     replacements?: string[];
   };
+
   let finalHref = pathValue.href;
 
   if (pathValue.replacements && replacements) {
@@ -156,5 +116,5 @@ export function asUrl<TApp extends keyof typeof pathsConfigData>(
     }
   }
 
-  return `${basePath}${finalHref}`;
+  return `${appUrl}${finalHref}`;
 }
