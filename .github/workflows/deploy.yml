@@ -112,6 +112,8 @@ jobs:
               echo "NEXT_PUBLIC_LANDING_BASE_URL=${NEXT_PUBLIC_LANDING_BASE_URL}"
               echo "NEXT_PUBLIC_LEARN_BASE_URL=${NEXT_PUBLIC_LEARN_BASE_URL}"
               echo "NEXT_PUBLIC_SCOUT_BASE_URL=${NEXT_PUBLIC_SCOUT_BASE_URL}"
+              echo "NEXT_PUBLIC_ATTENDANCE_BASE_URL=${NEXT_PUBLIC_ATTENDANCE_BASE_URL}"
+              echo "CRON_SECURITY_KEY=${CRON_SECRET_KEY}"
               echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
             } > "apps/$APP/.env"
             cp "apps/$APP/.env" "apps/$APP/.env.production"
@@ -129,6 +131,8 @@ jobs:
           NEXT_PUBLIC_LANDING_BASE_URL: ${{ secrets.NEXT_PUBLIC_LANDING_BASE_URL }}
           NEXT_PUBLIC_LEARN_BASE_URL: ${{ secrets.NEXT_PUBLIC_LEARN_BASE_URL }}
           NEXT_PUBLIC_SCOUT_BASE_URL: ${{ secrets.NEXT_PUBLIC_SCOUT_BASE_URL }}
+          NEXT_PUBLIC_ATTENDANCE_BASE_URL: ${{ secrets.NEXT_PUBLIC_ATTENDANCE_BASE_URL }}
+          CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
 
       - name: Turbo prebuild all deployable apps
         run: |
@@ -232,6 +236,8 @@ jobs:
             webhook_key: WEBHOOK_URL_SCOUT
           - app: docs
             webhook_key: WEBHOOK_URL_DOCS
+          - app: attendance
+            webhook_key: WEBHOOK_URL_ATTENDANCE
 
     steps:
       - name: Checkout
