@@ -107,7 +107,7 @@ jobs:
       - name: Generate environment files
         run: |
           set -euo pipefail
-          for APP in auth landing learn scout nitro-api; do
+          for APP in auth landing learn scout nitro-api attendance; do
             mkdir -p "apps/$APP"
             {
               echo "NODE_ENV=${NODE_ENV}"
