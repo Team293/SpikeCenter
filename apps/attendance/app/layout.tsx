@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import IOSInstallPrompt from "@/app/_components/install-app-ios";
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import IOSInstallPrompt from "./_components/install-app-ios";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,10 +29,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <link rel="manifest" href="/manifest.json" />
-      <IOSInstallPrompt />
+        <link rel="manifest" href="/manifest.json" />
+        <IOSInstallPrompt />
 
-      <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>{children}</NuqsAdapter>
       </body>
     </html>
   );

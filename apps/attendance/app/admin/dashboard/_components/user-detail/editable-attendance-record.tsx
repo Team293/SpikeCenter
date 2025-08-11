@@ -44,7 +44,7 @@ export function EditableAttendanceRecord({
     }
 
     const [time, modifier] = time12h.split(" ");
-    let [hours, minutes] = time.split(":");
+    let [hours, minutes] = time.split(":"); // eslint-disable-line prefer-const
 
     if (hours === "12") {
       hours = "00";

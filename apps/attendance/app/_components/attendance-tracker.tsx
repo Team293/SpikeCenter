@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { AttendanceStatus } from "./attendance-status";
 import { StatusIndicator } from "./status-indicator";
-import { getCurrentDate } from "@/lib/date-helper";
+import { getCurrentDate } from "~/lib/date-helper";
 import { UserHeader } from "./user-header";
-import { ViewAdminDashboard } from "@/app/_components/view-admin-dashboard";
-import { logAction } from "@/app/_actions/server-actions";
 import { asUrl } from "@spike/config/paths.config";
 import sharedEnv from "@spike/env/env.shared";
 import { redirect } from "next/navigation";
+import { logAction } from "~/_actions/server-actions";
+import { ViewAdminDashboard } from "./view-admin-dashboard";
 
 export default function AttendanceTracker({
   session,
@@ -20,12 +20,6 @@ export default function AttendanceTracker({
   isCheckedIn: boolean;
   checkInTime?: Date;
 }) {
-  if (!session) {
-    return redirect(
-      asUrl("auth", "login") + "?redirectUrl=" + sharedEnv.ATTENDANCE_BASE_URL,
-    );
-  }
-
   const [isCheckedIn, setIsCheckedIn] = useState(initialCheckedIn);
   const [checkInTime, setCheckInTime] = useState<Date | undefined>(
     initialCheckInTime,
@@ -33,11 +27,18 @@ export default function AttendanceTracker({
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  if (!session) {
+    redirect(
+      asUrl("auth", "login") + "?redirectUrl=" + sharedEnv.ATTENDANCE_BASE_URL,
+    );
+  }
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const checkInOutHandler = async (status: string) => {
+    if (!session) return;
     setLoading(true);
     await logAction(status, session.user.id);
     if (status === "check-in") {

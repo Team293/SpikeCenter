@@ -4,9 +4,9 @@ import { ColumnDef } from "@tanstack/table-core";
 import React, { useState } from "react";
 import { Eye, Download } from "lucide-react";
 import { Button } from "@spike/ui/button";
-import { useDataTable } from "@/hooks/use-data-table";
-import { DataTable } from "@/components/data-table/data-table";
-import UserDetailSheet from "@/app/admin/dashboard/_components/user-detail/user-detail-sheet";
+import UserDetailSheet from "./user-detail/user-detail-sheet";
+import { useDataTable } from "~/hooks/use-data-table";
+import { DataTable } from "~/components/data-table/data-table";
 
 export interface TableUser {
   id: string;
@@ -93,6 +93,7 @@ export function UserTable({ users }: { users: TableUser[] }) {
       sorting: [{ id: "hours", desc: true }],
       columnPinning: { right: ["actions"] },
     },
+    // @ts-expect-error - getRowId is not defined in the type
     getRowId: (row) => row.id,
   });
 
@@ -113,7 +114,7 @@ export function UserTable({ users }: { users: TableUser[] }) {
 
       <DataTable table={table}>
         <UserDetailSheet
-          // @ts-ignore (will never be null when open)
+          // @ts-expect-error - user will never be null here
           userId={selectedUser}
           open={open}
           onOpenChange={setOpen}

@@ -1,15 +1,12 @@
 import React from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { AdminHeader } from "@/app/admin/dashboard/_components/admin-header";
-import {
-  TableUser,
-  UserTable,
-} from "@/app/admin/dashboard/_components/user-table";
 import { Card, CardContent, CardHeader } from "@spike/ui/card";
-import FloatingSettings from "@/app/admin/dashboard/_components/floating-settings";
-import { calculateHours } from "@/app/admin/dashboard/_actions/server-actions";
 import { auth } from "@spike/auth";
+import { TableUser, UserTable } from "./_components/user-table";
+import { calculateHours } from "./_actions/server-actions";
+import FloatingSettings from "./_components/floating-settings";
+import { AdminHeader } from "./_components/admin-header";
 
 async function AdminPage(props: any) {
   const session = await auth.api.getSession({

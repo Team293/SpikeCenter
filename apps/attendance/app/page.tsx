@@ -1,7 +1,7 @@
-import AttendanceTracker from "@/app/_components/attendance-tracker";
 import { headers } from "next/headers";
-import { getCheckedInTime, getStatus } from "@/app/_actions/server-actions";
 import { auth } from "@spike/auth";
+import AttendanceTracker from "./_components/attendance-tracker";
+import { getCheckedInTime, getStatus } from "./_actions/server-actions";
 
 export default async function Home() {
   const session = await auth.api.getSession({

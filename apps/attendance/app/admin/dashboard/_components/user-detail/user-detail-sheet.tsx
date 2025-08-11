@@ -2,10 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Sheet, SheetContent } from "@spike/ui/sheet";
 import { Button } from "@spike/ui/button";
 import { Plus } from "lucide-react";
-import {
-  getUserDetail,
-  createAttendanceRecord,
-} from "@/app/admin/dashboard/_actions/server-actions";
 import { LoadingState } from "./loading-state";
 import { UserHeader } from "./user-header";
 import { UserInfoCard } from "./user-info-card";
@@ -18,6 +14,10 @@ import type {
   UserDetailSheetProps,
   AttendanceRecord,
 } from "./types";
+import {
+  createAttendanceRecord,
+  getUserDetail,
+} from "../../_actions/server-actions";
 
 function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetProps) {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set());

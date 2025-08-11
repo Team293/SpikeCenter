@@ -1,8 +1,8 @@
 "use server";
 
 import { desc, eq } from "drizzle-orm";
-import { UserDetail } from "@/app/admin/dashboard/_components/user-detail/types";
-import { attendance, db } from "@spike/db";
+import { attendance, db, user } from "@spike/db";
+import { UserDetail } from "../_components/user-detail/types";
 
 export async function calculateHours(userId: string): Promise<number> {
   const records = await db
@@ -64,7 +64,7 @@ export async function getUserDetail(userId: string): Promise<UserDetail> {
     id: dbUser[0].id,
     userName: dbUser[0].name,
     email: dbUser[0].email,
-    // @ts-ignore
+    // @ts-expect-error - role is not typed in the db schema, but we know it exists
     role: dbUser[0].role,
     hoursInShop,
     attendanceRecords,

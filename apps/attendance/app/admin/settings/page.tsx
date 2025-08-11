@@ -1,10 +1,10 @@
 import React from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { AdminHeader } from "@/app/admin/dashboard/_components/admin-header";
-import DaySelectionHandler from "@/app/admin/settings/_components/day-selection-handler";
-import { getShopDays } from "@/app/admin/settings/_actions/server-actions";
 import { auth } from "@spike/auth";
+import { AdminHeader } from "../dashboard/_components/admin-header";
+import { getShopDays } from "./_actions/server-actions";
+import DaySelectionHandler from "./_components/day-selection-handler";
 
 async function SettingsPage(props: any) {
   const session = await auth.api.getSession({
