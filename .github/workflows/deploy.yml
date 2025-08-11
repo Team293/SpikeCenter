@@ -98,9 +98,6 @@ jobs:
       - name: Generate environment files
         run: |
           set -euo pipefail
-          echo "Available environment variables:"
-          env | grep -E "(GITHUB_|GH_|BETTER_|DATABASE_|NEXT_PUBLIC_)" | sort || echo "No matching env vars found"
-
           for APP in auth landing learn scout nitro-api; do
             mkdir -p "apps/$APP"
             {
