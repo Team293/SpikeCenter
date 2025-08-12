@@ -98,7 +98,7 @@ jobs:
       - name: Generate environment files
         run: |
           set -euo pipefail
-          for APP in auth landing learn scout nitro-api; do
+          for APP in auth landing learn scout nitro-api attendance; do
             mkdir -p "apps/$APP"
             {
               echo "NODE_ENV=${NODE_ENV}"
@@ -146,12 +146,13 @@ jobs:
           ls -1 apps/scout/.next || true
           ls -1 apps/docs/.next || true
           ls -1 apps/nitro-api/.output || true
+          ls -1 apps/attendance/.next || true
 
       - name: Package build artifacts
         run: |
           set -euo pipefail
             mkdir -p dist-artifacts
-          for APP in auth landing learn scout docs; do
+          for APP in auth landing learn scout docs attendance; do
             if [ -d "apps/$APP/.next" ]; then
               (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}${ARTIFACT_SUFFIX}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
               echo "Packaged next-${APP}${ARTIFACT_SUFFIX}.tgz"
@@ -214,6 +215,14 @@ jobs:
         with:
           name: nitro-api${{ env.ARTIFACT_SUFFIX }}
           path: dist-artifacts/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Upload artifact attendance
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-attendance${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-attendance${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
 
