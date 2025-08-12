@@ -98,33 +98,45 @@ jobs:
       - name: Generate environment files
         run: |
           set -euo pipefail
-          for APP in auth landing learn scout nitro-api; do
+          for APP in auth landing learn scout nitro-api attendance; do
             mkdir -p "apps/$APP"
             {
-              echo "BETTER_AUTH_URL=${BETTER_AUTH_URL}"
-              echo "DATABASE_URL=${DATABASE_URL}"
-              echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
-              echo "NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}"
+              echo "NODE_ENV=${NODE_ENV}"
               echo "BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}"
-              echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
+              echo "DATABASE_URL=${DATABASE_URL}"
               echo "GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}"
               echo "GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}"
+              echo "NEXT_PUBLIC_AUTH_BASE_URL=${NEXT_PUBLIC_AUTH_BASE_URL}"
+              echo "NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+              echo "NEXT_PUBLIC_DOCS_BASE_URL=${NEXT_PUBLIC_DOCS_BASE_URL}"
+              echo "NEXT_PUBLIC_LANDING_BASE_URL=${NEXT_PUBLIC_LANDING_BASE_URL}"
+              echo "NEXT_PUBLIC_LEARN_BASE_URL=${NEXT_PUBLIC_LEARN_BASE_URL}"
+              echo "NEXT_PUBLIC_SCOUT_BASE_URL=${NEXT_PUBLIC_SCOUT_BASE_URL}"
+              echo "NEXT_PUBLIC_ATTENDANCE_BASE_URL=${NEXT_PUBLIC_ATTENDANCE_BASE_URL}"
+              echo "CRON_SECURITY_KEY=${CRON_SECRET_KEY}"
+              echo "NODE_TLS_REJECT_UNAUTHORIZED=0"
             } > "apps/$APP/.env"
             cp "apps/$APP/.env" "apps/$APP/.env.production"
             echo "Created env files for $APP"
           done
         env:
-          BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
-          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+          NODE_ENV: ${{ github.ref == 'refs/heads/production' && 'production' || 'staging' }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
           GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
+          NEXT_PUBLIC_AUTH_BASE_URL: ${{ secrets.NEXT_PUBLIC_AUTH_BASE_URL }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_DOCS_BASE_URL: ${{ secrets.NEXT_PUBLIC_DOCS_BASE_URL }}
+          NEXT_PUBLIC_LANDING_BASE_URL: ${{ secrets.NEXT_PUBLIC_LANDING_BASE_URL }}
+          NEXT_PUBLIC_LEARN_BASE_URL: ${{ secrets.NEXT_PUBLIC_LEARN_BASE_URL }}
+          NEXT_PUBLIC_SCOUT_BASE_URL: ${{ secrets.NEXT_PUBLIC_SCOUT_BASE_URL }}
+          NEXT_PUBLIC_ATTENDANCE_BASE_URL: ${{ secrets.NEXT_PUBLIC_ATTENDANCE_BASE_URL }}
+          CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
 
       - name: Turbo prebuild all deployable apps
         run: |
-          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/docs --filter=./apps/nitro-api
+          pnpm turbo run build --filter=./apps/auth --filter=./apps/landing --filter=./apps/learn --filter=./apps/scout --filter=./apps/docs --filter=./apps/nitro-api --filter=./apps/attendance
 
       - name: List built artifacts
         run: |
@@ -134,12 +146,13 @@ jobs:
           ls -1 apps/scout/.next || true
           ls -1 apps/docs/.next || true
           ls -1 apps/nitro-api/.output || true
+          ls -1 apps/attendance/.next || true
 
       - name: Package build artifacts
         run: |
           set -euo pipefail
             mkdir -p dist-artifacts
-          for APP in auth landing learn scout docs; do
+          for APP in auth landing learn scout docs attendance; do
             if [ -d "apps/$APP/.next" ]; then
               (cd apps/$APP && tar -czf "../../dist-artifacts/next-${APP}${ARTIFACT_SUFFIX}.tgz" .next $( [ -f .env ] && echo .env ) $( [ -f .env.production ] && echo .env.production ))
               echo "Packaged next-${APP}${ARTIFACT_SUFFIX}.tgz"
@@ -204,7 +217,15 @@ jobs:
           path: dist-artifacts/nitro-api${{ env.ARTIFACT_SUFFIX }}.tgz
           if-no-files-found: error
           retention-days: 3
-          
+
+      - name: Upload artifact attendance
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-attendance${{ env.ARTIFACT_SUFFIX }}
+          path: dist-artifacts/next-attendance${{ env.ARTIFACT_SUFFIX }}.tgz
+          if-no-files-found: error
+          retention-days: 3
+
   build-next:
     name: Build & push Next.js images (prebuilt)
     runs-on: ubuntu-latest
@@ -224,6 +245,8 @@ jobs:
             webhook_key: WEBHOOK_URL_SCOUT
           - app: docs
             webhook_key: WEBHOOK_URL_DOCS
+          - app: attendance
+            webhook_key: WEBHOOK_URL_ATTENDANCE
 
     steps:
       - name: Checkout

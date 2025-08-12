@@ -7,6 +7,7 @@ import { nextCookies } from 'better-auth/next-js';
 import { admin, bearer, magicLink, organization } from 'better-auth/plugins';
 
 import { baseAvatarPlugin } from './plugins/base-avatar-plugin';
+import sharedEnv from '@spike/env/env.shared';
 
 const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -37,15 +38,27 @@ const auth = betterAuth({
   ],
   advanced: {
     cookiePrefix: 'spike',
-    crossSubDomainCookies: {
-      enabled: true,
-      domain: 'spike.center',
-    },
+    useSecureCookies: serverEnv.NODE_ENV === 'production',
+    crossSubDomainCookies:
+      serverEnv.NODE_ENV === 'production'
+        ? {
+            enabled: true,
+            domain: '.spike.center',
+          }
+        : {
+            enabled: false,
+          },
   },
   trustedOrigins: [
     'https://auth.staging.spike.center',
     'https://auth.spike.center',
     'http://localhost:3001',
+    sharedEnv.ATTENDANCE_BASE_URL,
+    sharedEnv.AUTH_BASE_URL,
+    sharedEnv.LANDING_BASE_URL,
+    sharedEnv.DOCS_BASE_URL,
+    sharedEnv.LEARN_BASE_URL,
+    sharedEnv.SCOUT_BASE_URL
   ],
   emailVerification: {
     sendOnSignUp: false,
@@ -53,9 +66,6 @@ const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
-    cookieCache: {
-      enabled: false,
-    },
   },
   user: {
     deleteUser: {
