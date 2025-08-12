@@ -2,9 +2,13 @@ import {attendance, db, shop_days, user} from "@spike/db";
 import { and, eq, isNull, isNotNull } from 'drizzle-orm';
 import { DateTime } from 'luxon';
 
-const SECURITY_KEY = process.env.CRON_SECURITY_KEY || 'default_secret_key';
+const SECURITY_KEY = process.env.CRON_SECURITY_KEY;
 
 export async function POST(request: Request) {
+    if (!SECURITY_KEY) {
+        console.error("[Cron] SECURITY_KEY environment variable is not set");
+        return new Response("Server misconfiguration: missing security key", { status: 500 });
+    }
     const headerKey = request.headers.get('x-cron-key');
 
     if (headerKey !== SECURITY_KEY) {
